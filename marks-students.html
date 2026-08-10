@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student List — Marks</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">🎓</div>
+    <div><div class="brand-name">SmartAttend</div><div class="brand-sub">College Edition</div></div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">
+      <div class="nav-section-label">Main</div>
+      <a class="nav-item" href="dashboard.html"><span class="nav-icon">📊</span> Dashboard</a>
+      <a class="nav-item" href="users.html"><span class="nav-icon">👨‍🎓</span> Students</a>
+      <a class="nav-item" href="attendance.html"><span class="nav-icon">📋</span> Attendance</a>
+      <a class="nav-item" href="departments.html"><span class="nav-icon">🏫</span> Departments</a>
+      <a class="nav-item" href="approvals.html"><span class="nav-icon">✅</span> Approvals <span class="nav-badge">3</span></a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">Attendance</div>
+      <a class="nav-item" href="qr-generate.html"><span class="nav-icon">📷</span> Generate QR</a>
+      <a class="nav-item" href="qr-scan.html"><span class="nav-icon">🔍</span> Scan QR</a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">Marks</div>
+      <a class="nav-item active" href="marks.html"><span class="nav-icon">📝</span> Marks Dashboard</a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">Analytics</div>
+      <a class="nav-item" href="reports.html"><span class="nav-icon">📈</span> Reports</a>
+      <a class="nav-item" href="schedule.html"><span class="nav-icon">📅</span> Schedule</a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">Account</div>
+      <a class="nav-item" href="settings.html"><span class="nav-icon">⚙️</span> Settings</a>
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-info">
+      <div class="user-avatar" data-user-avatar>AU</div>
+      <div><div class="user-name" data-user-name>Admin</div><div class="user-role" data-user-role>Admin</div></div>
+    </div>
+    <button class="nav-item" data-logout style="margin-top:4px;color:var(--danger)"><span class="nav-icon">🚪</span> Logout</button>
+  </div>
+</aside>
+
+<header class="app-header">
+  <div class="header-left">
+    <button class="sidebar-toggle" id="sidebar-toggle">☰</button>
+    <div><div class="page-title" id="page-title">Student Performance List</div><div class="page-breadcrumb">Marks Dashboard</div></div>
+  </div>
+  <div class="header-right" id="students-header-actions">
+    <a href="users.html" class="btn btn-primary btn-sm">+ Add Student</a>
+  </div>
+</header>
+
+<main class="main-content">
+  <div class="breadcrumb-trail" style="margin-bottom:24px">
+    <a href="marks.html" class="breadcrumb-item">🏠 Programs</a>
+    <span class="breadcrumb-sep">›</span>
+    <a href="#" id="bc-dept-link" class="breadcrumb-item">UG</a>
+    <span class="breadcrumb-sep">›</span>
+    <a href="#" id="bc-yr-link" class="breadcrumb-item">Dept</a>
+    <span class="breadcrumb-sep">›</span>
+    <a href="#" id="bc-sec-link" class="breadcrumb-item">Year</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="breadcrumb-item active" id="bc-sec-name">Section</span>
+  </div>
+
+  <div class="card">
+    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <span class="card-title" id="class-title">Class Students</span>
+        <div style="font-size:13px;color:var(--text-muted);margin-top:2px" id="class-sub">Showing attendance &amp; IAT test fail counts per student</div>
+      </div>
+      <div class="search-input" style="width:240px">
+        <span class="search-icon">🔍</span>
+        <input type="text" class="form-control" id="student-search" placeholder="Search student name or roll..." oninput="filterStudents()" style="padding-left:32px" />
+      </div>
+    </div>
+    <div class="table-container" style="border:none;border-radius:0">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Student Name</th>
+            <th>Roll No</th>
+            <th>Attendance %</th>
+            <th>IAT 1 Fails</th>
+            <th>IAT 2 Fails</th>
+            <th>IAT 3 Fails</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="student-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<script src="demo-data.js"></script>
+<script src="app.js"></script>
+<script>
+const params = new URLSearchParams(location.search);
+const deptId = params.get('dept') || sessionStorage.getItem('m_dept') || 'd1';
+const year = parseInt(params.get('year') || sessionStorage.getItem('m_year') || '2');
+const sec = params.get('sec') || sessionStorage.getItem('m_sec') || 'A';
+
+sessionStorage.setItem('m_dept', deptId);
+sessionStorage.setItem('m_year', year);
+sessionStorage.setItem('m_sec', sec);
+
+if (isStudent()) {
+  const actions = document.getElementById('students-header-actions');
+  if (actions) actions.style.display = 'none';
+}
+
+const dept = DEMO_DEPARTMENTS.find(d => d.id === deptId) || DEMO_DEPARTMENTS[0];
+const prog = dept.program || sessionStorage.getItem('m_prog') || 'UG';
+
+document.getElementById('bc-dept-link').href = `marks-dept.html?prog=${prog}`;
+document.getElementById('bc-dept-link').textContent = prog;
+document.getElementById('bc-yr-link').href = `marks-year.html?dept=${dept.id}`;
+document.getElementById('bc-yr-link').textContent = dept.code;
+document.getElementById('bc-sec-link').href = `marks-section.html?dept=${dept.id}&year=${year}`;
+document.getElementById('bc-sec-link').textContent = `Year ${year}`;
+document.getElementById('bc-sec-name').textContent = `Section ${sec}`;
+
+document.getElementById('page-title').textContent = `${dept.code} Yr ${year} Sec ${sec} — Students`;
+document.getElementById('class-title').textContent = `${dept.code} - Year ${year} - Section ${sec}`;
+document.getElementById('class-sub').textContent = `Overall Attendance & Subject Failure Summary in IAT 1, 2, 3`;
+
+let allStudents = getStudents(dept.id, year, sec);
+
+function renderStudentTable(students) {
+  const tbody = document.getElementById('student-tbody');
+  
+  if (students.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state" style="padding:40px"><div class="empty-icon">👨‍🎓</div><p>No students found for this section</p>${!isStudent() ? '<a href="users.html" class="btn btn-primary btn-sm" style="margin-top:12px">+ Add Student</a>' : ''}</div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = students.map(s => {
+    // Get attendance % from DEMO_ATT_SUMMARY or calculate default
+    const attObj = DEMO_ATT_SUMMARY.find(a => a.userId === s.id || a.rollNo === s.rollNo);
+    const attPct = attObj ? attObj.percentage : 85;
+    
+    // Count failed subjects in IAT 1, 2, 3 (< 50% of max mark)
+    const iat1Fails = countFails(s.id, 1);
+    const iat2Fails = countFails(s.id, 2);
+    const iat3Fails = countFails(s.id, 3);
+
+    const failBadge = (count) => {
+      if (count === 0) return `<span class="badge badge-success">0 Failed</span>`;
+      return `<span class="badge badge-danger">⚠️ ${count} Subject${count > 1 ? 's' : ''}</span>`;
+    };
+
+    return `
+      <tr>
+        <td>
+          <div style="display:flex;align-items:center;gap:10px">
+            ${avatarHtml(s.name)}
+            <span style="font-weight:600">${s.name}</span>
+          </div>
+        </td>
+        <td><code style="font-size:13px;color:var(--primary);font-weight:700">${s.rollNo || s.id}</code></td>
+        <td>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-weight:800;color:${attPct >= 75 ? 'var(--success)' : 'var(--danger)'}">${attPct}%</span>
+            <div style="width:60px">
+              <div class="progress" style="height:4px">
+                <div class="progress-bar ${attPct >= 75 ? 'success' : 'danger'}" style="width:${attPct}%"></div>
+              </div>
+            </div>
+          </div>
+        </td>
+        <td>${failBadge(iat1Fails)}</td>
+        <td>${failBadge(iat2Fails)}</td>
+        <td>${failBadge(iat3Fails)}</td>
+        <td>
+          <a href="marks-detail.html?uid=${s.id}" class="btn btn-primary btn-sm">📊 View Marksheet</a>
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+function filterStudents() {
+  const query = document.getElementById('student-search').value.toLowerCase();
+  const filtered = allStudents.filter(s => 
+    s.name.toLowerCase().includes(query) || (s.rollNo && s.rollNo.toLowerCase().includes(query))
+  );
+  renderStudentTable(filtered);
+}
+
+renderStudentTable(allStudents);
+</script>
+</body>
+</html>

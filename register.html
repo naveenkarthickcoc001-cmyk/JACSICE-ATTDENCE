@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Register — SmartAttend</title>
+  <meta name="description" content="Register for SmartAttend — verification required from teacher or admin." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="auth-body">
+
+  <div class="auth-side">
+    <div class="brand-logo">🎓</div>
+    <h2>Join SmartAttend</h2>
+    <p>Set up your college attendance account — free forever.</p>
+    <div class="feature-list">
+      <div class="feature-item">🎁 Free forever — no credit card</div>
+      <div class="feature-item">🔒 Verified by your teacher/admin</div>
+      <div class="feature-item">📊 View your marks &amp; attendance</div>
+      <div class="feature-item">📷 QR code check-in</div>
+    </div>
+    <div style="margin-top:32px;background:rgba(255,255,255,0.1);border-radius:12px;padding:14px 16px">
+      <p style="color:rgba(255,255,255,0.9);font-size:13px;font-weight:600;margin-bottom:6px">⚠️ Verification Required</p>
+      <p style="color:rgba(255,255,255,0.7);font-size:12px">New student registrations must be approved by your teacher or admin before you can log in.</p>
+    </div>
+    <p style="color:rgba(255,255,255,0.5);font-size:12px;margin-top:24px">© 2026 SmartAttend</p>
+  </div>
+
+  <div class="auth-main" style="max-width:560px">
+    <div class="auth-box animate-fade-in" style="width:100%">
+      <a href="login.html" style="font-size:13px;color:var(--text-muted);display:inline-flex;align-items:center;gap:6px;margin-bottom:20px;text-decoration:none">← Back to Login</a>
+      <h1>Create Account</h1>
+      <p class="auth-sub">Register for SmartAttend (requires teacher/admin approval)</p>
+
+      <!-- College Code verify -->
+      <div id="reg-college-verify" style="background:var(--bg-secondary);border-radius:var(--radius);padding:14px 16px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
+        <span id="college-verify-icon" style="font-size:20px">🏛️</span>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:600" id="college-verify-label">Enter college code first</div>
+          <div style="font-size:12px;color:var(--text-muted)">Demo: <strong>SEC2026</strong></div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="text" id="reg-college-code" class="form-control" placeholder="SEC2026" style="width:120px;text-transform:uppercase;font-weight:700;letter-spacing:0.05em" />
+          <button class="btn btn-secondary btn-sm" onclick="verifyCollegeReg()">Verify</button>
+        </div>
+      </div>
+
+      <!-- Role Tabs -->
+      <div class="role-tabs">
+        <button class="role-tab" data-role="admin"   id="reg-tab-admin">🔑 Admin</button>
+        <button class="role-tab active" data-role="teacher" id="reg-tab-teacher">👩‍🏫 Teacher</button>
+        <button class="role-tab" data-role="student" id="reg-tab-student">👨‍🎓 Student</button>
+      </div>
+
+      <div class="alert alert-warning" style="padding:10px 14px;margin-bottom:16px" id="role-info">
+        <span>ℹ️</span>
+        <span id="role-info-text">Teacher registration requires admin approval.</span>
+      </div>
+
+      <form id="register-form" novalidate>
+        <div style="display:flex;flex-direction:column;gap:14px">
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+            <div class="form-group"><label class="form-label">First Name *</label><input type="text" class="form-control" id="reg-first" placeholder="Arjun" required /></div>
+            <div class="form-group"><label class="form-label">Last Name *</label><input type="text" class="form-control" id="reg-last" placeholder="Sharma" required /></div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Email *</label>
+            <div class="input-group"><span class="input-icon">✉️</span><input type="email" class="form-control" id="reg-email" placeholder="you@college.edu" required /></div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Phone *</label>
+            <div class="input-group"><span class="input-icon">📱</span><input type="tel" class="form-control" id="reg-phone" placeholder="9876543210" required /></div>
+          </div>
+
+          <!-- Student fields -->
+          <div id="student-fields" class="hidden" style="display:flex;flex-direction:column;gap:14px">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+              <div class="form-group">
+                <label class="form-label">Department</label>
+                <select class="form-control" id="reg-dept" onchange="updateSections()">
+                  <option value="">Select...</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Program</label>
+                <select class="form-control" id="reg-program" onchange="filterDepts()">
+                  <option value="UG">UG (Under Graduate)</option>
+                  <option value="PG">PG (Post Graduate)</option>
+                </select>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px">
+              <div class="form-group">
+                <label class="form-label">Year</label>
+                <select class="form-control" id="reg-year" onchange="updateSections()">
+                  <option value="1">Year 1</option>
+                  <option value="2" selected>Year 2</option>
+                  <option value="3">Year 3</option>
+                  <option value="4">Year 4</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Section</label>
+                <select class="form-control" id="reg-section"></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Roll Number</label>
+                <input type="text" class="form-control" id="reg-rollno" placeholder="CSE21A001" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Teacher fields -->
+          <div id="teacher-fields" class="hidden" style="display:flex;flex-direction:column;gap:14px">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+              <div class="form-group">
+                <label class="form-label">Department</label>
+                <select class="form-control" id="reg-teacher-dept">
+                  <option value="">Select...</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Subject / Specialisation</label>
+                <input type="text" class="form-control" id="reg-subject" placeholder="Data Structures" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Admin fields -->
+          <div id="admin-fields" class="hidden">
+            <div class="alert alert-info" style="padding:10px 14px">
+              <span>🔑</span><span>Admin accounts require special approval from the institution.</span>
+            </div>
+          </div>
+
+          <!-- Password -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+            <div class="form-group"><label class="form-label">Password *</label><input type="password" class="form-control" id="reg-password" placeholder="Min 8 chars" required /></div>
+            <div class="form-group"><label class="form-label">Confirm *</label><input type="password" class="form-control" id="reg-confirm" placeholder="Repeat password" required /></div>
+          </div>
+
+          <div style="display:flex;align-items:flex-start;gap:10px;font-size:14px;color:var(--text-secondary)">
+            <input type="checkbox" id="reg-terms" style="margin-top:3px;accent-color:var(--primary)" required />
+            <label for="reg-terms">I agree to the <a href="#">Terms of Service</a> and understand my account requires approval before login.</label>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-lg w-full" id="register-submit-btn">Submit Registration 📨</button>
+        </div>
+      </form>
+
+      <div class="form-divider">or</div>
+      <div style="text-align:center;font-size:14px;color:var(--text-muted)">
+        Already have an account? <a href="login.html" style="color:var(--primary);font-weight:600;margin-left:4px">Sign in</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success Modal -->
+  <div class="modal-overlay" id="success-modal">
+    <div class="modal">
+      <div class="modal-body" style="text-align:center;padding:48px 32px">
+        <div style="font-size:64px;margin-bottom:16px">📨</div>
+        <h2 style="font-size:1.4rem;margin-bottom:10px">Registration Submitted!</h2>
+        <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px">
+          Your registration has been submitted. Your teacher or admin will review and approve your account. You'll be able to login once approved.
+        </p>
+        <div style="background:var(--primary-50);border-radius:var(--radius);padding:14px;text-align:left;font-size:14px;margin-bottom:24px" id="success-summary"></div>
+        <a href="login.html" class="btn btn-primary btn-lg w-full">Go to Login</a>
+      </div>
+    </div>
+  </div>
+
+<script src="demo-data.js"></script>
+<script src="app.js"></script>
+<script>
+let collegeVerified = false;
+
+// Populate dept dropdowns
+function populateDepts(program = 'UG') {
+  const depts = DEMO_DEPARTMENTS.filter(d => d.program === program);
+  ['reg-dept', 'reg-teacher-dept'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML = '<option value="">Select department...</option>' +
+      depts.map(d => `<option value="${d.id}">${d.code} — ${d.name}</option>`).join('');
+  });
+}
+function filterDepts() { populateDepts(document.getElementById('reg-program').value); }
+function updateSections() {
+  const deptId = document.getElementById('reg-dept').value;
+  const year = parseInt(document.getElementById('reg-year').value);
+  const secs = getSections(deptId, year);
+  const el = document.getElementById('reg-section');
+  el.innerHTML = secs.length ? secs.map(s => `<option>${s}</option>`).join('') : '<option>A</option>';
+}
+populateDepts();
+
+// College verification
+function verifyCollegeReg() {
+  const code = document.getElementById('reg-college-code').value.trim().toUpperCase();
+  if (code !== COLLEGE.code) { showToast('Invalid college code', 'error'); return; }
+  collegeVerified = true;
+  sessionStorage.setItem('sa_college', COLLEGE.name);
+  document.getElementById('college-verify-icon').textContent = '✅';
+  document.getElementById('college-verify-label').textContent = COLLEGE.name + ' — Verified';
+  document.getElementById('college-verify-label').style.color = 'var(--success)';
+  showToast('College verified!', 'success');
+}
+
+// Role switching
+const roleInfoMap = {
+  student: 'Student registration requires approval from your class teacher or admin.',
+  teacher: 'Teacher registration requires admin approval.',
+  admin:   'Admin registration requires institutional verification.',
+};
+document.querySelectorAll('.role-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    const role = tab.dataset.role;
+    document.getElementById('student-fields').classList.toggle('hidden', role !== 'student');
+    document.getElementById('teacher-fields').classList.toggle('hidden', role !== 'teacher');
+    document.getElementById('admin-fields').classList.toggle('hidden', role !== 'admin');
+    document.getElementById('role-info-text').textContent = roleInfoMap[role];
+  });
+});
+
+// Form submit
+document.getElementById('register-form').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const first = document.getElementById('reg-first').value.trim();
+  const last  = document.getElementById('reg-last').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const pw    = document.getElementById('reg-password').value;
+  const conf  = document.getElementById('reg-confirm').value;
+  const terms = document.getElementById('reg-terms').checked;
+  const btn   = document.getElementById('register-submit-btn');
+  const role  = document.querySelector('.role-tab.active').dataset.role;
+
+  if (!collegeVerified) { showToast('Please verify your college code first', 'error'); return; }
+  if (!first || !last || !email) { showToast('Please fill all required fields', 'error'); return; }
+  if (pw.length < 8) { showToast('Password must be at least 8 characters', 'error'); return; }
+  if (pw !== conf) { showToast('Passwords do not match', 'error'); return; }
+  if (!terms) { showToast('Please accept the terms', 'error'); return; }
+
+  btn.textContent = 'Submitting...'; btn.disabled = true;
+
+  setTimeout(() => {
+    const deptId = role === 'student' ? document.getElementById('reg-dept').value : document.getElementById('reg-teacher-dept').value;
+    const dept = DEMO_DEPARTMENTS.find(d => d.id === deptId);
+    const newPending = {
+      id: 'p' + Date.now(),
+      name: `${first} ${last}`,
+      email, role,
+      deptId: deptId || null,
+      year: role === 'student' ? parseInt(document.getElementById('reg-year').value) : null,
+      section: role === 'student' ? document.getElementById('reg-section').value : null,
+      rollNo: role === 'student' ? document.getElementById('reg-rollno').value : null,
+      appliedDate: new Date().toISOString().split('T')[0],
+      status: 'pending',
+      collegeCode: COLLEGE.code,
+    };
+    DEMO_PENDING.push(newPending);
+
+    document.getElementById('success-summary').innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div>👤 <strong>${first} ${last}</strong></div>
+        <div>📧 ${email}</div>
+        <div>🎭 Role: ${role.charAt(0).toUpperCase()+role.slice(1)}</div>
+        ${dept ? `<div>🏫 Department: ${dept.code} — ${dept.name}</div>` : ''}
+        ${newPending.rollNo ? `<div>🪪 Roll No: ${newPending.rollNo}</div>` : ''}
+        <div>📅 Applied: ${newPending.appliedDate}</div>
+        <div style="color:var(--warning);font-weight:600;margin-top:4px">⏳ Status: Pending Approval</div>
+      </div>
+    `;
+    openModal('success-modal');
+    btn.textContent = 'Submit Registration 📨'; btn.disabled = false;
+  }, 1200);
+});
+</script>
+</body>
+</html>

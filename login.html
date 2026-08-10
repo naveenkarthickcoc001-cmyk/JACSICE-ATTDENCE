@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login — SmartAttend</title>
+  <meta name="description" content="Login to SmartAttend — Smart Attendance System for Colleges." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .step { display: none; }
+    .step.active { display: block; }
+    .college-icon { font-size: 4rem; margin-bottom: 16px; animation: float 3s ease-in-out infinite; }
+    .verified-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--success-bg); color: var(--success);
+      border-radius: 999px; padding: 6px 16px; font-weight: 600; font-size: 14px;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body class="auth-body">
+
+  <div class="auth-side">
+    <div class="brand-logo">🎓</div>
+    <h2>SmartAttend</h2>
+    <p>The modern way to track attendance in colleges and universities.</p>
+    <div class="feature-list">
+      <div class="feature-item">✅ QR Code Attendance in seconds</div>
+      <div class="feature-item">📍 GPS Location Verification</div>
+      <div class="feature-item">📊 Real-Time Dashboard</div>
+      <div class="feature-item">📈 IAT Marks & Analytics</div>
+    </div>
+    <p style="color:rgba(255,255,255,0.5);font-size:12px;margin-top:40px">© 2026 SmartAttend · Free Forever</p>
+  </div>
+
+  <div class="auth-main">
+    <div class="auth-box animate-fade-in">
+
+      <!-- ══════ STEP 1 — College Verification ══════ -->
+      <div class="step active" id="step-college">
+        <div style="text-align:center;margin-bottom:28px">
+          <div class="college-icon">🏛️</div>
+          <h1 style="font-size:1.6rem">College Verification</h1>
+          <p style="font-size:14px;color:var(--text-muted);margin-top:8px">Enter your college code to continue</p>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:18px">
+          <div class="form-group">
+            <label class="form-label" for="college-code">College Code</label>
+            <div class="input-group">
+              <span class="input-icon">🔑</span>
+              <input type="text" class="form-control" id="college-code"
+                     placeholder="e.g. SEC2026" autocomplete="off"
+                     style="text-transform:uppercase;font-weight:700;letter-spacing:0.1em" />
+            </div>
+            <p class="form-hint">Contact your admin for the college code · Demo code: <strong>SEC2026</strong></p>
+          </div>
+
+          <button class="btn btn-primary btn-lg w-full" id="verify-college-btn" onclick="verifyCollege()">
+            Verify College →
+          </button>
+
+          <button class="btn btn-ghost btn-sm w-full" onclick="
+            document.getElementById('college-code').value='SEC2026';
+            showToast('Demo college code filled','info')">
+            🎭 Use Demo Code
+          </button>
+        </div>
+      </div>
+
+      <!-- ══════ STEP 2 — Login ══════ -->
+      <div class="step" id="step-login">
+        <div class="verified-badge">✅ <span id="verified-college-name">College Verified</span></div>
+        <h1>Welcome back</h1>
+        <p class="auth-sub">Sign in to your SmartAttend account</p>
+
+        <!-- Role tabs -->
+        <div class="role-tabs" id="role-tabs" style="margin-top:20px">
+          <button class="role-tab active" data-role="admin"   id="tab-admin">🔑 Admin</button>
+          <button class="role-tab"        data-role="teacher" id="tab-teacher">👩‍🏫 Teacher</button>
+          <button class="role-tab"        data-role="student" id="tab-student">👨‍🎓 Student</button>
+        </div>
+
+        <form id="login-form" novalidate>
+          <div style="display:flex;flex-direction:column;gap:18px">
+            <div class="form-group">
+              <label class="form-label" for="login-email">Email / Roll Number</label>
+              <div class="input-group">
+                <span class="input-icon">✉️</span>
+                <input type="text" class="form-control" id="login-email" placeholder="you@college.edu" autocomplete="email" required />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="login-password">
+                Password
+                <a href="#" id="forgot-link" style="float:right;font-size:13px;font-weight:500;color:var(--primary)">Forgot password?</a>
+              </label>
+              <div class="input-group">
+                <span class="input-icon">🔒</span>
+                <input type="password" class="form-control" id="login-password" placeholder="Enter your password" required />
+                <button type="button" class="input-icon-right" id="toggle-password">👁️</button>
+              </div>
+            </div>
+
+            <div class="alert alert-info" style="padding:10px 14px">
+              <span>🔑</span>
+              <div><strong>Admin Credentials</strong> — Email: <code>jacsice@college.edu</code> · Pass: <code>naveen2006</code> · Code: <code>SEC2026</code></div>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-full btn-lg" id="login-submit-btn">Sign In →</button>
+          </div>
+        </form>
+
+        <div class="form-divider">or</div>
+        <div style="text-align:center;font-size:14px;color:var(--text-muted)">
+          Don't have an account?
+          <a href="register.html" style="color:var(--primary);font-weight:600;margin-left:4px">Register</a>
+        </div>
+
+        <!-- Testing Admin Login Button -->
+        <div style="margin-top:24px;padding-top:24px;border-top:1px solid var(--border)">
+          <p style="font-size:12px;text-align:center;color:var(--text-muted);margin-bottom:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em">Testing Quick Fill</p>
+          <button class="btn btn-secondary btn-sm w-full" onclick="quickLogin('admin')">🔑 Auto-Fill Admin Credentials</button>
+        </div>
+
+        <button class="btn btn-ghost btn-sm" style="margin-top:12px;color:var(--text-muted)" onclick="backToCollege()">← Change College Code</button>
+      </div>
+
+    </div>
+  </div>
+
+<script src="demo-data.js"></script>
+<script src="app.js"></script>
+<script>
+// ─── College verification ────────────────────────────────
+function verifyCollege() {
+  const code = document.getElementById('college-code').value.trim().toUpperCase();
+  if (!code) { showToast('Please enter the college code', 'error'); return; }
+  if (code !== COLLEGE.code) { showToast('Invalid college code. Try SEC2026', 'error'); return; }
+  sessionStorage.setItem('sa_college', COLLEGE.name);
+  document.getElementById('verified-college-name').textContent = COLLEGE.name + ' Verified';
+  document.getElementById('step-college').classList.remove('active');
+  document.getElementById('step-login').classList.add('active');
+  showToast('College verified ✅ — please sign in', 'success');
+}
+
+function backToCollege() {
+  document.getElementById('step-login').classList.remove('active');
+  document.getElementById('step-college').classList.add('active');
+}
+
+// Auto-skip college step if already verified
+if (sessionStorage.getItem('sa_college')) {
+  document.getElementById('verified-college-name').textContent = sessionStorage.getItem('sa_college') + ' Verified';
+  document.getElementById('step-college').classList.remove('active');
+  document.getElementById('step-login').classList.add('active');
+}
+
+// ─── Role tabs ──────────────────────────────────────────
+document.querySelectorAll('.role-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+  });
+});
+
+// Password toggle
+document.getElementById('toggle-password').addEventListener('click', function() {
+  const pw = document.getElementById('login-password');
+  pw.type = pw.type === 'password' ? 'text' : 'password';
+  this.textContent = pw.type === 'password' ? '👁️' : '🔒';
+});
+
+// Forgot password
+document.getElementById('forgot-link').addEventListener('click', e => {
+  e.preventDefault(); showToast('Password reset link sent (demo)', 'info');
+});
+
+// ─── Login form ─────────────────────────────────────────
+document.getElementById('login-form').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  const role = document.querySelector('.role-tab.active').dataset.role;
+  const btn = document.getElementById('login-submit-btn');
+
+  if (!email) { showToast('Please enter your email', 'error'); return; }
+  if (!password) { showToast('Please enter your password', 'error'); return; }
+
+  btn.textContent = 'Signing in...'; btn.disabled = true;
+
+  setTimeout(() => {
+    // Check pending registrations first
+    const pending = DEMO_PENDING.find(p => p.email === email && p.role === role);
+    if (pending) {
+      btn.textContent = 'Sign In →'; btn.disabled = false;
+      if (pending.status === 'pending') {
+        showToast('Your account is pending approval. Please wait for teacher/admin verification.', 'warning');
+      } else if (pending.status === 'rejected') {
+        showToast('Your registration was rejected. Contact admin.', 'error');
+      }
+      return;
+    }
+
+    // Find the user
+    const user = DEMO_USERS.find(u => u.role === role && (u.email === email || u.rollNo === email))
+      || DEMO_USERS.find(u => u.role === role);
+
+    if (!user) { btn.textContent='Sign In →'; btn.disabled=false; showToast('User not found','error'); return; }
+
+    saveAuthUser({ ...user, college: sessionStorage.getItem('sa_college') });
+    showToast(`Welcome, ${user.name.split(' ')[0]}! 🎉`, 'success');
+    setTimeout(() => { window.location.href = 'dashboard.html'; }, 800);
+  }, 1200);
+});
+
+function quickLogin(role) {
+  if (!sessionStorage.getItem('sa_college')) {
+    sessionStorage.setItem('sa_college', COLLEGE.name);
+    document.getElementById('verified-college-name').textContent = COLLEGE.name + ' Verified';
+    document.getElementById('step-college').classList.remove('active');
+    document.getElementById('step-login').classList.add('active');
+  }
+  document.getElementById('login-email').value = 'jacsice@college.edu';
+  document.getElementById('login-password').value = 'naveen2006';
+  document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
+  document.querySelector(`.role-tab[data-role="admin"]`).classList.add('active');
+  showToast('Admin credentials filled: jacsice@college.edu', 'info');
+}
+
+// Require college verification
+document.getElementById('verify-college-btn').addEventListener('keydown', e => {
+  if (e.key === 'Enter') verifyCollege();
+});
+document.getElementById('college-code').addEventListener('keydown', e => {
+  if (e.key === 'Enter') verifyCollege();
+});
+</script>
+</body>
+</html>

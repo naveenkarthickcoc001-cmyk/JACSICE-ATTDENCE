@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — SmartAttend</title>
+  <meta name="description" content="SmartAttend Dashboard — Real-time analytics, live attendance logs, and stats." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+</head>
+<body>
+<div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+<!-- ─── Sidebar ─── -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">🎓</div>
+    <div>
+      <div class="brand-name">SmartAttend</div>
+      <div class="brand-sub">College Edition</div>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">
+      <div class="nav-section-label">Main</div>
+      <a class="nav-item active" href="dashboard.html" data-page="dashboard.html"><span class="nav-icon">📊</span> Dashboard</a>
+      <a class="nav-item" href="users.html" data-page="users.html" id="nav-users"><span class="nav-icon">👨‍🎓</span> Students</a>
+      <a class="nav-item" href="attendance.html" data-page="attendance.html"><span class="nav-icon">📋</span> Attendance</a>
+      <a class="nav-item" href="departments.html" data-page="departments.html" id="nav-depts"><span class="nav-icon">🏫</span> Departments</a>
+      <a class="nav-item" href="approvals.html" data-page="approvals.html" id="nav-approvals"><span class="nav-icon">✅</span> Approvals <span class="nav-badge" id="dash-pending-badge">3</span></a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">Attendance</div>
+      <a class="nav-item" href="qr-generate.html" data-page="qr-generate.html" id="nav-qr-gen"><span class="nav-icon">📷</span> Generate QR</a>
+      <a class="nav-item" href="qr-scan.html" data-page="qr-scan.html"><span class="nav-icon">🔍</span> Scan QR</a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">Marks</div>
+      <a class="nav-item" href="marks.html" data-page="marks.html"><span class="nav-icon">📝</span> Marks Dashboard</a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">Analytics</div>
+      <a class="nav-item" href="reports.html" data-page="reports.html"><span class="nav-icon">📈</span> Reports</a>
+      <a class="nav-item" href="schedule.html" data-page="schedule.html"><span class="nav-icon">📅</span> Schedule</a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">Account</div>
+      <a class="nav-item" href="settings.html" data-page="settings.html"><span class="nav-icon">⚙️</span> Settings</a>
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-info">
+      <div class="user-avatar" data-user-avatar>AU</div>
+      <div>
+        <div class="user-name" data-user-name>Admin User</div>
+        <div class="user-role" data-user-role>Admin</div>
+      </div>
+    </div>
+    <button class="nav-item" data-logout style="margin-top:4px;color:var(--danger)">
+      <span class="nav-icon">🚪</span> Logout
+    </button>
+  </div>
+</aside>
+
+<!-- ─── Header ─── -->
+<header class="app-header">
+  <div class="header-left">
+    <button class="sidebar-toggle" id="sidebar-toggle">☰</button>
+    <div>
+      <div class="page-title" id="welcome-msg">Dashboard Overview</div>
+      <div class="page-breadcrumb" id="college-name-header">Sunrise Engineering College</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div style="font-size:13px;color:var(--text-muted);display:flex;align-items:center;gap:6px">
+      <span>🕒</span> <span id="clock" style="font-weight:600;color:var(--text)">--:--:--</span>
+    </div>
+    <a href="qr-generate.html" class="btn btn-primary btn-sm" id="header-gen-btn">📷 Generate QR</a>
+  </div>
+</header>
+
+<!-- ─── Main Content ─── -->
+<main class="main-content">
+
+  <!-- Role Notice Banner -->
+  <div class="alert alert-info hidden" id="student-notice-banner" style="margin-bottom:20px">
+    <span>🎓</span>
+    <div>You are in <strong>Student Mode</strong>. You can view your attendance, mark sheets, and class schedules.</div>
+  </div>
+
+  <!-- Summary Stats Grid -->
+  <div class="stats-grid stagger">
+    <div class="stat-card blue">
+      <div class="stat-icon">👨‍🎓</div>
+      <div class="stat-info">
+        <div class="stat-value" id="stat-total-students" data-counter="0">0</div>
+        <div class="stat-label">Total Students</div>
+        <span class="stat-change neutral" id="stat-total-sub">Registered students</span>
+      </div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-icon">✅</div>
+      <div class="stat-info">
+        <div class="stat-value" id="stat-present-today" data-counter="0">0</div>
+        <div class="stat-label">Present Today</div>
+        <span class="stat-change up" id="stat-present-rate">0% attendance rate</span>
+      </div>
+    </div>
+    <div class="stat-card red">
+      <div class="stat-icon">❌</div>
+      <div class="stat-info">
+        <div class="stat-value" id="stat-absent-today" data-counter="0">0</div>
+        <div class="stat-label">Absent Today</div>
+        <span class="stat-change down" id="stat-absent-rate">0% absent</span>
+      </div>
+    </div>
+    <div class="stat-card amber">
+      <div class="stat-icon">⏰</div>
+      <div class="stat-info">
+        <div class="stat-value" id="stat-late-today" data-counter="0">0</div>
+        <div class="stat-label">Late Arrivals</div>
+        <span class="stat-change neutral">Within grace period</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Grid: Charts & Live Feed -->
+  <div class="grid-main" style="margin-top:24px">
+
+    <!-- Left Column (Wide) -->
+    <div style="display:flex;flex-direction:column;gap:20px">
+
+      <!-- Overview Bar Chart Card -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <span class="card-title">📈 Attendance Analytics</span>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Compare daily breakdown and weekly performance trends</div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-primary btn-sm" id="chart-daily-btn" onclick="switchChart('daily')">Today</button>
+            <button class="btn btn-ghost btn-sm" id="chart-weekly-btn" onclick="switchChart('weekly')">Weekly</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="chart-wrapper" style="height:260px">
+            <canvas id="overview-chart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Attendance Feed -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <span class="card-title">⚡ Live Attendance Feed</span>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Real-time check-in activity</div>
+          </div>
+          <span class="live-dot">LIVE</span>
+        </div>
+        <div class="table-container" style="border:none;border-radius:0">
+          <table class="table" id="live-table">
+            <thead>
+              <tr>
+                <th>Student</th>
+                <th>Check-In</th>
+                <th>Status</th>
+                <th>Method</th>
+              </tr>
+            </thead>
+            <tbody id="live-tbody">
+              <tr><td colspan="4"><div class="empty-state" style="padding:30px"><div class="spinner"></div></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card-footer" style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:13px;color:var(--text-muted)">Showing today's records</span>
+          <a href="attendance.html" class="btn btn-secondary btn-sm">View All</a>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right Column (Narrow) -->
+    <div style="display:flex;flex-direction:column;gap:20px">
+
+      <!-- Quick Actions -->
+      <div class="card">
+        <div class="card-header"><span class="card-title">⚡ Quick Actions</span></div>
+        <div class="card-body" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <a href="qr-generate.html" class="btn btn-primary" style="flex-direction:column;gap:4px;padding:16px;height:auto;text-align:center" id="qa-qr-gen">
+            <span style="font-size:22px">📷</span>
+            <span style="font-size:13px">Generate QR</span>
+          </a>
+          <a href="qr-scan.html" class="btn btn-secondary" style="flex-direction:column;gap:4px;padding:16px;height:auto;text-align:center">
+            <span style="font-size:22px">🔍</span>
+            <span style="font-size:13px">Scan QR</span>
+          </a>
+          <a href="marks.html" class="btn btn-secondary" style="flex-direction:column;gap:4px;padding:16px;height:auto;text-align:center">
+            <span style="font-size:22px">📝</span>
+            <span style="font-size:13px">Marks Dashboard</span>
+          </a>
+          <a href="users.html" class="btn btn-secondary" style="flex-direction:column;gap:4px;padding:16px;height:auto;text-align:center" id="qa-users">
+            <span style="font-size:22px">👨‍🎓</span>
+            <span style="font-size:13px">Users Directory</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Attendance % Donut -->
+      <div class="card">
+        <div class="card-header"><span class="card-title">📊 Today's Rate</span></div>
+        <div class="card-body" style="display:flex;align-items:center;justify-content:center;gap:24px">
+          <div style="position:relative;width:160px;height:160px">
+            <canvas id="donut-chart" style="width:160px;height:160px"></canvas>
+            <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none">
+              <div style="font-size:1.8rem;font-weight:800;color:var(--primary)" id="donut-pct-text">0%</div>
+              <div style="font-size:11px;color:var(--text-muted)">Present</div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;align-items:center;gap:8px;font-size:13px">
+              <span style="width:10px;height:10px;border-radius:50%;background:var(--success);flex-shrink:0"></span>
+              <span id="donut-present-text">Present — 0</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:13px">
+              <span style="width:10px;height:10px;border-radius:50%;background:var(--danger);flex-shrink:0"></span>
+              <span id="donut-absent-text">Absent — 0</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:13px">
+              <span style="width:10px;height:10px;border-radius:50%;background:var(--warning);flex-shrink:0"></span>
+              <span id="donut-late-text">Late — 0</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- At-Risk Students -->
+  <div class="card" style="margin-top:20px" id="at-risk-card">
+    <div class="card-header">
+      <span class="card-title">⚠️ At-Risk Students (Attendance &lt; 75%)</span>
+      <a href="reports.html" class="btn btn-ghost btn-sm">View All</a>
+    </div>
+    <div class="table-container" style="border:none;border-radius:0">
+      <table class="table" id="risk-table">
+        <thead>
+          <tr>
+            <th>Student</th>
+            <th>Roll No</th>
+            <th>Class</th>
+            <th>Present</th>
+            <th>Absent</th>
+            <th>Attendance %</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="risk-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<script src="demo-data.js"></script>
+<script src="app.js"></script>
+<script>
+const user = currentUser();
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('welcome-msg').textContent = `Welcome back, ${user.name.split(' ')[0]} 👋`;
+  if (user.college) {
+    document.getElementById('college-name-header').textContent = user.college;
+  }
+
+  // Adjust for Student Role
+  if (isStudent()) {
+    document.getElementById('student-notice-banner').classList.remove('hidden');
+    document.getElementById('nav-depts').style.display = 'none';
+    document.getElementById('nav-approvals').style.display = 'none';
+    document.getElementById('nav-qr-gen').style.display = 'none';
+    document.getElementById('header-gen-btn').style.display = 'none';
+    document.getElementById('qa-qr-gen').style.display = 'none';
+    document.getElementById('at-risk-card').style.display = 'none';
+  }
+
+  // Adjust for Teacher Role
+  if (isTeacher()) {
+    document.getElementById('nav-depts').style.display = 'none';
+  }
+});
+
+// ─── Clock ─────────────────────────────────────────────
+startClock('clock');
+
+// Update stat cards dynamically
+document.getElementById('stat-total-students').setAttribute('data-counter', DEMO_STATS.total);
+document.getElementById('stat-present-today').setAttribute('data-counter', DEMO_STATS.present);
+document.getElementById('stat-absent-today').setAttribute('data-counter', DEMO_STATS.absent);
+document.getElementById('stat-late-today').setAttribute('data-counter', DEMO_STATS.late);
+document.getElementById('stat-present-rate').textContent = `${DEMO_STATS.percentage}% attendance rate`;
+document.getElementById('stat-absent-rate').textContent = `${100 - DEMO_STATS.percentage}% absent`;
+
+// Update donut text dynamically
+document.getElementById('donut-pct-text').textContent = `${DEMO_STATS.percentage}%`;
+document.getElementById('donut-present-text').textContent = `Present — ${DEMO_STATS.present}`;
+document.getElementById('donut-absent-text').textContent = `Absent — ${DEMO_STATS.absent}`;
+document.getElementById('donut-late-text').textContent = `Late — ${DEMO_STATS.late}`;
+
+// ─── Charts ────────────────────────────────────────────
+Chart.defaults.font.family = 'Inter, sans-serif';
+
+// Overview Bar Chart
+const overviewCtx = document.getElementById('overview-chart').getContext('2d');
+let overviewChart = new Chart(overviewCtx, {
+  type: 'bar',
+  data: {
+    labels: ['Present', 'Absent', 'Late'],
+    datasets: [{
+      data: [DEMO_STATS.present, DEMO_STATS.absent, DEMO_STATS.late],
+      backgroundColor: ['rgba(16,185,129,0.15)', 'rgba(239,68,68,0.15)', 'rgba(245,158,11,0.15)'],
+      borderColor: ['#10b981', '#ef4444', '#f59e0b'],
+      borderWidth: 2,
+      borderRadius: 8,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      y: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { color: '#94a3b8', font: { size: 12 } } },
+      x: { grid: { display: false }, ticks: { color: '#475569', font: { size: 13 } } }
+    }
+  }
+});
+
+// Donut Chart
+const donutCtx = document.getElementById('donut-chart').getContext('2d');
+new Chart(donutCtx, {
+  type: 'doughnut',
+  data: {
+    labels: ['Present', 'Absent', 'Late'],
+    datasets: [{
+      data: DEMO_STATS.total > 0 ? [DEMO_STATS.present, DEMO_STATS.absent, DEMO_STATS.late] : [0, 0, 1], // neutral single slice if empty
+      backgroundColor: DEMO_STATS.total > 0 ? ['#10b981', '#ef4444', '#f59e0b'] : ['#e2e8f0'],
+      borderWidth: 0,
+      hoverOffset: 4,
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: true,
+    cutout: '72%',
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.raw}` } }
+    }
+  }
+});
+
+// ─── Switch Chart Mode ──────────────────────────────────
+function switchChart(mode) {
+  if (mode === 'weekly') {
+    overviewChart.data.labels = DEMO_REPORTS.weekly.map(d => d.day);
+    overviewChart.data.datasets[0].data = DEMO_REPORTS.weekly.map(d => d.present);
+    overviewChart.data.datasets[0].backgroundColor = DEMO_REPORTS.weekly.map(() => 'rgba(79,70,229,0.12)');
+    overviewChart.data.datasets[0].borderColor = DEMO_REPORTS.weekly.map(() => '#4f46e5');
+    document.getElementById('chart-weekly-btn').className = 'btn btn-secondary btn-sm';
+    document.getElementById('chart-daily-btn').className = 'btn btn-ghost btn-sm';
+  } else {
+    overviewChart.data.labels = ['Present', 'Absent', 'Late'];
+    overviewChart.data.datasets[0].data = [DEMO_STATS.present, DEMO_STATS.absent, DEMO_STATS.late];
+    overviewChart.data.datasets[0].backgroundColor = ['rgba(16,185,129,0.15)', 'rgba(239,68,68,0.15)', 'rgba(245,158,11,0.15)'];
+    overviewChart.data.datasets[0].borderColor = ['#10b981', '#ef4444', '#f59e0b'];
+    document.getElementById('chart-daily-btn').className = 'btn btn-secondary btn-sm';
+    document.getElementById('chart-weekly-btn').className = 'btn btn-ghost btn-sm';
+  }
+  overviewChart.update();
+}
+
+// ─── Live Feed Simulation ───────────────────────────────
+function renderLiveFeed(list) {
+  const tbody = document.getElementById('live-tbody');
+  tbody.innerHTML = list.slice(0, 5).map(r => `
+    <tr>
+      <td>
+        <div style="display:flex;align-items:center;gap:10px">
+          ${avatarHtml(r.name)}
+          <div>
+            <div style="font-weight:600">${r.name}</div>
+            <div style="font-size:11px;color:var(--text-muted)">${r.subject}</div>
+          </div>
+        </div>
+      </td>
+      <td style="font-weight:600">${r.checkIn}</td>
+      <td>${statusBadge(r.status)}</td>
+      <td><span class="badge badge-info">${r.method}</span></td>
+    </tr>
+  `).join('');
+}
+
+renderLiveFeed(DEMO_ATTENDANCE);
+
+// ─── At-Risk Students ────────────────────────────────────
+function renderRiskTable() {
+  const atRisk = DEMO_REPORTS.studentSummary.filter(s => s.percentage < 75);
+  const tbody = document.getElementById('risk-tbody');
+  tbody.innerHTML = atRisk.map(s => `
+    <tr>
+      <td>
+        <div style="display:flex;align-items:center;gap:10px">
+          ${avatarHtml(s.name)}
+          <span style="font-weight:600">${s.name}</span>
+        </div>
+      </td>
+      <td><code style="font-size:13px;color:var(--primary)">${s.rollNo}</code></td>
+      <td>${s.class}</td>
+      <td><span style="color:var(--success);font-weight:700">${s.present}</span></td>
+      <td><span style="color:var(--danger);font-weight:700">${s.absent}</span></td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-weight:800;color:var(--danger)">${s.percentage}%</span>
+          <div style="width:60px">
+            <div class="progress" style="height:4px"><div class="progress-bar danger" style="width:${s.percentage}%"></div></div>
+          </div>
+        </div>
+      </td>
+      <td><button class="btn btn-ghost btn-sm" onclick="showToast('Alert sent to ${s.name}','info')">📩 Alert</button></td>
+    </tr>
+  `).join('');
+}
+
+renderRiskTable();
+</script>
+</body>
+</html>

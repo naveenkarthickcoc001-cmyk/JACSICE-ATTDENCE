@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scan QR — SmartAttend</title>
+  <meta name="description" content="Scan a SmartAttend QR code to mark your attendance with GPS verification." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <!-- html5-qrcode scanner library -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <style>
+    /* Scanner overlay styles */
+    #qr-reader { border-radius: var(--radius-lg) !important; overflow: hidden; }
+    #qr-reader video { border-radius: var(--radius-lg) !important; }
+    #qr-reader img { border-radius: var(--radius-sm); }
+    #qr-reader__scan_region { border-radius: var(--radius-lg) !important; }
+
+    .verification-step {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 16px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--surface);
+      font-size: 14px;
+      transition: all 0.3s ease;
+    }
+    .verification-step.pending { border-color: var(--border); }
+    .verification-step.checking { border-color: var(--info); background: var(--info-bg); }
+    .verification-step.success { border-color: var(--success); background: var(--success-bg); }
+    .verification-step.error { border-color: var(--danger); background: var(--danger-bg); }
+
+    .step-icon { font-size: 22px; width: 32px; text-align: center; flex-shrink: 0; }
+    .step-info { flex: 1; }
+    .step-label { font-weight: 600; color: var(--text); }
+    .step-detail { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .step-status { font-size: 18px; }
+
+    .selfie-preview {
+      width: 100%;
+      border-radius: var(--radius-lg);
+      border: 2px solid var(--border);
+      max-height: 200px;
+      object-fit: cover;
+    }
+    .camera-controls { display: flex; gap: 10px; margin-top: 10px; }
+
+    @keyframes scanLine {
+      0% { top: 0; }
+      100% { top: 100%; }
+    }
+  </style>
+</head>
+<body>
+<div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+<!-- ─── Sidebar ─── -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">🎓</div>
+    <div>
+      <div class="brand-name">SmartAttend</div>
+      <div class="brand-sub">College Edition</div>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">
+      <div class="nav-section-label">Main</div>
+      <a class="nav-item" href="dashboard.html" data-page="dashboard.html"><span class="nav-icon">📊</span> Dashboard</a>
+      <a class="nav-item" href="users.html" data-page="users.html"><span class="nav-icon">👨‍🎓</span> Students</a>
+      <a class="nav-item" href="attendance.html" data-page="attendance.html"><span class="nav-icon">📋</span> Attendance</a>
+      <a class="nav-item" href="departments.html" data-page="departments.html"><span class="nav-icon">🏫</span> Departments</a>
+      <a class="nav-item" href="approvals.html" data-page="approvals.html"><span class="nav-icon">✅</span> Approvals <span class="nav-badge">3</span></a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">Attendance</div>
+      <a class="nav-item" href="qr-generate.html" data-page="qr-generate.html"><span class="nav-icon">📷</span> Generate QR</a>
+      <a class="nav-item active" href="qr-scan.html" data-page="qr-scan.html"><span class="nav-icon">🔍</span> Scan QR</a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">Marks</div>
+      <a class="nav-item" href="marks.html" data-page="marks.html"><span class="nav-icon">📝</span> Marks Dashboard</a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">Analytics</div>
+      <a class="nav-item" href="reports.html" data-page="reports.html"><span class="nav-icon">📈</span> Reports</a>
+      <a class="nav-item" href="schedule.html" data-page="schedule.html"><span class="nav-icon">📅</span> Schedule</a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">Account</div>
+      <a class="nav-item" href="settings.html" data-page="settings.html"><span class="nav-icon">⚙️</span> Settings</a>
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-info">
+      <div class="user-avatar" data-user-avatar>AU</div>
+      <div>
+        <div class="user-name" data-user-name>Admin User</div>
+        <div class="user-role" data-user-role>Admin</div>
+      </div>
+    </div>
+    <button class="nav-item" data-logout style="margin-top:4px;color:var(--danger)">
+      <span class="nav-icon">🚪</span> Logout
+    </button>
+  </div>
+</aside>
+
+<!-- ─── Header ─── -->
+<header class="app-header">
+  <div class="header-left">
+    <button class="sidebar-toggle" id="sidebar-toggle">☰</button>
+    <div>
+      <div class="page-title">Scan QR Code</div>
+      <div class="page-breadcrumb">Mark your attendance by scanning the session QR</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <a href="qr-generate.html" class="btn btn-primary btn-sm">📷 Generate QR</a>
+  </div>
+</header>
+
+<!-- ─── Main ─── -->
+<main class="main-content">
+  <div class="grid-2" style="gap:24px;align-items:start">
+
+    <!-- Scanner -->
+    <div>
+      <div class="card" id="scanner-card">
+        <div class="card-header">
+          <span class="card-title">📷 Camera Scanner</span>
+          <span class="badge badge-primary" id="scanner-badge">Ready</span>
+        </div>
+        <div class="card-body">
+          <!-- Info Alert -->
+          <div class="alert alert-info" style="margin-bottom:20px">
+            <span>ℹ️</span>
+            <div>Point your camera at the QR code displayed in your classroom. The scanner will detect it automatically. <strong>Requires camera permission.</strong></div>
+          </div>
+
+          <!-- Scanner container -->
+          <div id="qr-reader" style="width:100%"></div>
+
+          <!-- Control buttons -->
+          <div style="display:flex;gap:10px;margin-top:16px">
+            <button class="btn btn-primary flex-1" id="start-scan-btn" onclick="startScanner()">
+              ▶️ Start Camera
+            </button>
+            <button class="btn btn-secondary flex-1 hidden" id="stop-scan-btn" onclick="stopScanner()">
+              ⏹ Stop Camera
+            </button>
+          </div>
+
+          <!-- Demo: Manual token entry -->
+          <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+            <p style="font-size:13px;color:var(--text-muted);margin-bottom:10px;font-weight:600">🎭 Demo Mode — Enter token manually</p>
+            <div style="display:flex;gap:8px">
+              <input type="text" class="form-control" id="manual-token" placeholder="e.g. SA-ABC123-XYZ" style="font-family:monospace" />
+              <button class="btn btn-primary" onclick="simulateScan()">Simulate Scan</button>
+            </div>
+            <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
+              <button class="btn btn-ghost btn-sm" onclick="document.getElementById('manual-token').value='SA-DEMO01-TOKEN'">Use Demo Token</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Selfie Panel (conditional) -->
+      <div class="card hidden" id="selfie-card" style="margin-top:20px">
+        <div class="card-header">
+          <span class="card-title">🤳 Selfie Verification</span>
+          <span class="badge badge-warning">Required</span>
+        </div>
+        <div class="card-body">
+          <p style="font-size:14px;color:var(--text-muted);margin-bottom:16px">Take a selfie to verify your identity</p>
+          <video id="selfie-video" style="width:100%;border-radius:var(--radius-lg);background:#000;max-height:200px;object-fit:cover" autoplay muted playsinline></video>
+          <canvas id="selfie-canvas" style="display:none"></canvas>
+          <img id="selfie-preview" class="selfie-preview hidden" alt="Your selfie" />
+          <div class="camera-controls">
+            <button class="btn btn-primary flex-1" id="capture-btn" onclick="captureSelfie()">📸 Take Selfie</button>
+            <button class="btn btn-secondary flex-1 hidden" id="retake-btn" onclick="retakeSelfie()">🔄 Retake</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Verification + Result Panel -->
+    <div style="display:flex;flex-direction:column;gap:20px">
+
+      <!-- Verification Steps -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">🔐 Verification Steps</span>
+        </div>
+        <div class="card-body" style="display:flex;flex-direction:column;gap:10px">
+
+          <div class="verification-step pending" id="step-qr">
+            <span class="step-icon">📷</span>
+            <div class="step-info">
+              <div class="step-label">QR Code Scan</div>
+              <div class="step-detail" id="step-qr-detail">Waiting for QR scan...</div>
+            </div>
+            <span class="step-status" id="step-qr-icon">⏳</span>
+          </div>
+
+          <div class="verification-step pending" id="step-time">
+            <span class="step-icon">⏰</span>
+            <div class="step-info">
+              <div class="step-label">Time Verification</div>
+              <div class="step-detail" id="step-time-detail">Checking session window...</div>
+            </div>
+            <span class="step-status" id="step-time-icon">⏳</span>
+          </div>
+
+          <div class="verification-step pending" id="step-gps">
+            <span class="step-icon">📍</span>
+            <div class="step-info">
+              <div class="step-label">GPS Location</div>
+              <div class="step-detail" id="step-gps-detail">Location not verified</div>
+            </div>
+            <span class="step-status" id="step-gps-icon">⏳</span>
+          </div>
+
+          <div class="verification-step pending" id="step-selfie">
+            <span class="step-icon">🤳</span>
+            <div class="step-info">
+              <div class="step-label">Selfie Verification</div>
+              <div class="step-detail" id="step-selfie-detail">Not required</div>
+            </div>
+            <span class="step-status" id="step-selfie-icon">⏳</span>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Session Info (after scan) -->
+      <div class="card hidden" id="session-info-card">
+        <div class="card-header">
+          <span class="card-title">📋 Session Info</span>
+        </div>
+        <div class="card-body" style="display:flex;flex-direction:column;gap:10px;font-size:14px" id="session-info-body">
+        </div>
+      </div>
+
+      <!-- Result Panel -->
+      <div class="card hidden" id="result-card">
+        <div class="card-body" style="text-align:center;padding:40px">
+          <div id="result-icon" style="font-size:72px;margin-bottom:16px"></div>
+          <h2 id="result-title" style="font-size:1.4rem;margin-bottom:8px"></h2>
+          <p id="result-desc" style="font-size:14px;color:var(--text-muted);margin-bottom:24px"></p>
+          <div id="result-details" style="background:var(--bg-secondary);border-radius:var(--radius);padding:16px;text-align:left;font-size:14px;margin-bottom:20px"></div>
+          <button class="btn btn-primary w-full" onclick="resetScanner()">🔄 Scan Another</button>
+        </div>
+      </div>
+
+      <!-- GPS Map Info -->
+      <div class="card" id="gps-card">
+        <div class="card-header">
+          <span class="card-title">📍 Your Location</span>
+          <button class="btn btn-secondary btn-sm" onclick="getGPS()">🔄 Refresh</button>
+        </div>
+        <div class="card-body" id="gps-body" style="font-size:14px">
+          <div style="text-align:center;padding:20px;color:var(--text-muted)">
+            <div style="font-size:36px;margin-bottom:12px">📍</div>
+            <p>Click Refresh to get your current location</p>
+            <button class="btn btn-secondary btn-sm" style="margin-top:12px" onclick="getGPS()">Get My Location</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<script src="demo-data.js"></script>
+<script src="app.js"></script>
+<script>
+let html5QrCode = null;
+let gpsData = null;
+let sessionData = null;
+let selfieData = null;
+
+// ─── Start Camera Scanner ────────────────────────────────
+function startScanner() {
+  document.getElementById('start-scan-btn').classList.add('hidden');
+  document.getElementById('stop-scan-btn').classList.remove('hidden');
+  document.getElementById('scanner-badge').textContent = 'Scanning...';
+  document.getElementById('scanner-badge').className = 'badge badge-success';
+
+  html5QrCode = new Html5Qrcode('qr-reader');
+  Html5Qrcode.getCameras().then(cameras => {
+    if (!cameras || cameras.length === 0) {
+      showToast('No camera found. Use the demo token below.', 'warning');
+      stopScanner();
+      return;
+    }
+    const cameraId = cameras[cameras.length - 1].id; // prefer back camera
+    html5QrCode.start(
+      cameraId,
+      { fps: 10, qrbox: { width: 250, height: 250 } },
+      onQRSuccess,
+      onQRError
+    ).catch(err => {
+      showToast('Camera access denied. Use the demo token below.', 'warning');
+      stopScanner();
+    });
+  }).catch(err => {
+    showToast('Cannot access camera: ' + err + '. Use demo token below.', 'warning');
+    stopScanner();
+  });
+}
+
+function stopScanner() {
+  if (html5QrCode) {
+    html5QrCode.stop().catch(() => {});
+    html5QrCode = null;
+  }
+  document.getElementById('start-scan-btn').classList.remove('hidden');
+  document.getElementById('stop-scan-btn').classList.add('hidden');
+  document.getElementById('scanner-badge').textContent = 'Stopped';
+  document.getElementById('scanner-badge').className = 'badge badge-warning';
+}
+
+function onQRSuccess(decodedText) {
+  stopScanner();
+  try {
+    const data = JSON.parse(decodedText);
+    processQRData(data);
+  } catch {
+    showToast('Invalid QR code format', 'error');
+  }
+}
+
+function onQRError(error) { /* silent */ }
+
+// ─── Demo: Simulate a scan ──────────────────────────────
+function simulateScan() {
+  const token = document.getElementById('manual-token').value.trim() || 'SA-DEMO01-TOKEN';
+  const demoData = {
+    token,
+    class: 'CS-A',
+    subject: 'Data Structures',
+    date: new Date().toISOString().split('T')[0],
+    time: '09:00',
+    expires: Date.now() + 600000, // 10 min from now
+    gps: false,
+    selfie: false,
+  };
+  processQRData(demoData);
+}
+
+// ─── Process QR Data ────────────────────────────────────
+function processQRData(data) {
+  sessionData = data;
+  setStep('qr', 'checking', 'QR Code detected — validating...');
+
+  setTimeout(() => {
+    setStep('qr', 'success', `Token: ${data.token}`);
+    document.getElementById('session-info-card').classList.remove('hidden');
+    document.getElementById('session-info-body').innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div><span style="color:var(--text-muted)">Class:</span> <strong>${data.class}</strong></div>
+        <div><span style="color:var(--text-muted)">Subject:</span> <strong>${data.subject}</strong></div>
+        <div><span style="color:var(--text-muted)">Date:</span> <strong>${data.date}</strong></div>
+        <div><span style="color:var(--text-muted)">Session:</span> <strong>${data.time}</strong></div>
+      </div>
+    `;
+    verifyTime(data);
+  }, 800);
+}
+
+// ─── Time Verification ──────────────────────────────────
+function verifyTime(data) {
+  setStep('time', 'checking', 'Checking session time window...');
+  setTimeout(() => {
+    const now = Date.now();
+    if (now > data.expires) {
+      setStep('time', 'error', 'Session has expired');
+      showResult('error', '❌ Session Expired', 'This QR code has expired. Ask your teacher to generate a new one.', data);
+    } else {
+      const remaining = Math.round((data.expires - now) / 60000);
+      setStep('time', 'success', `Valid — ${remaining} min remaining`);
+      if (data.gps) verifyGPS(data);
+      else if (data.selfie) showSelfie(data);
+      else recordAttendance(data);
+    }
+  }, 700);
+}
+
+// ─── GPS Verification ───────────────────────────────────
+function verifyGPS(data) {
+  setStep('gps', 'checking', 'Getting your location...');
+  if (!navigator.geolocation) {
+    setStep('gps', 'error', 'GPS not available on this device');
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(pos => {
+    gpsData = pos.coords;
+    setStep('gps', 'success', `Lat: ${pos.coords.latitude.toFixed(4)}, Lng: ${pos.coords.longitude.toFixed(4)}`);
+    updateGPSCard(pos.coords);
+    if (data.selfie) showSelfie(data);
+    else recordAttendance(data);
+  }, err => {
+    setStep('gps', 'error', 'Location access denied — contact teacher');
+    showResult('error', '📍 Location Required', 'Please enable location access and try again.', data);
+  });
+}
+
+// ─── Selfie Capture ─────────────────────────────────────
+function showSelfie(data) {
+  document.getElementById('selfie-card').classList.remove('hidden');
+  setStep('selfie', 'checking', 'Waiting for selfie...');
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } })
+    .then(stream => {
+      const video = document.getElementById('selfie-video');
+      video.srcObject = stream;
+    })
+    .catch(() => {
+      setStep('selfie', 'error', 'Camera not available');
+      recordAttendance(data);
+    });
+}
+
+function captureSelfie() {
+  const video = document.getElementById('selfie-video');
+  const canvas = document.getElementById('selfie-canvas');
+  canvas.width = video.videoWidth || 320;
+  canvas.height = video.videoHeight || 240;
+  canvas.getContext('2d').drawImage(video, 0, 0);
+  selfieData = canvas.toDataURL('image/jpeg', 0.8);
+  document.getElementById('selfie-preview').src = selfieData;
+  document.getElementById('selfie-preview').classList.remove('hidden');
+  document.getElementById('selfie-video').classList.add('hidden');
+  document.getElementById('capture-btn').classList.add('hidden');
+  document.getElementById('retake-btn').classList.remove('hidden');
+  setStep('selfie', 'success', 'Selfie captured ✓');
+  recordAttendance(sessionData);
+}
+
+function retakeSelfie() {
+  selfieData = null;
+  document.getElementById('selfie-preview').classList.add('hidden');
+  document.getElementById('selfie-video').classList.remove('hidden');
+  document.getElementById('capture-btn').classList.remove('hidden');
+  document.getElementById('retake-btn').classList.add('hidden');
+  setStep('selfie', 'checking', 'Waiting for selfie...');
+}
+
+// ─── Record Attendance ──────────────────────────────────
+function recordAttendance(data) {
+  const now = new Date();
+  const checkIn = now.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
+  const user = DEMO_CURRENT_USER;
+  const isLate = now.getHours() > 9 || (now.getHours() === 9 && now.getMinutes() > 10);
+
+  setTimeout(() => {
+    showResult(
+      'success',
+      '✅ Attendance Marked!',
+      isLate ? 'Your attendance has been recorded as Late.' : 'Your attendance has been recorded as Present.',
+      {
+        ...data,
+        studentName: user.name,
+        checkIn,
+        status: isLate ? 'Late' : 'Present',
+        method: 'QR' + (gpsData ? ' + GPS' : '') + (selfieData ? ' + Selfie' : ''),
+      }
+    );
+    showToast('Attendance recorded successfully! ✅', 'success');
+  }, 600);
+}
+
+// ─── Show Result ────────────────────────────────────────
+function showResult(type, title, desc, data) {
+  const card = document.getElementById('result-card');
+  card.classList.remove('hidden');
+  document.getElementById('result-icon').textContent = type === 'success' ? '✅' : '❌';
+  document.getElementById('result-title').textContent = title;
+  document.getElementById('result-desc').textContent = desc;
+  document.getElementById('result-details').innerHTML = data ? `
+    <div style="display:flex;flex-direction:column;gap:8px">
+      ${data.studentName ? `<div>👤 <strong>${data.studentName}</strong></div>` : ''}
+      <div>🏫 ${data.class} — ${data.subject}</div>
+      ${data.checkIn ? `<div>⏰ Checked in at <strong>${data.checkIn}</strong></div>` : ''}
+      ${data.status ? `<div>Status: ${statusBadge(data.status.toLowerCase())}</div>` : ''}
+      ${data.method ? `<div>🔐 Method: <span class="badge badge-primary">${data.method}</span></div>` : ''}
+    </div>
+  ` : '';
+}
+
+// ─── Reset ──────────────────────────────────────────────
+function resetScanner() {
+  document.getElementById('result-card').classList.add('hidden');
+  document.getElementById('session-info-card').classList.add('hidden');
+  document.getElementById('selfie-card').classList.add('hidden');
+  sessionData = null; gpsData = null; selfieData = null;
+  ['qr','time','gps','selfie'].forEach(s => setStep(s, 'pending', s === 'gps' ? 'Location not verified' : s === 'selfie' ? 'Not required' : 'Waiting...'));
+  document.getElementById('scanner-badge').textContent = 'Ready';
+  document.getElementById('scanner-badge').className = 'badge badge-primary';
+}
+
+// ─── Step helper ────────────────────────────────────────
+function setStep(id, state, detail) {
+  const el = document.getElementById(`step-${id}`);
+  const detailEl = document.getElementById(`step-${id}-detail`);
+  const iconEl = document.getElementById(`step-${id}-icon`);
+  el.className = `verification-step ${state}`;
+  if (detailEl) detailEl.textContent = detail;
+  const icons = { pending: '⏳', checking: '🔄', success: '✅', error: '❌' };
+  if (iconEl) iconEl.textContent = icons[state] || '⏳';
+}
+
+// ─── GPS Card ───────────────────────────────────────────
+function getGPS() {
+  if (!navigator.geolocation) { showToast('GPS not supported', 'error'); return; }
+  document.getElementById('gps-body').innerHTML = '<div style="text-align:center;padding:20px"><div class="spinner"></div><p style="margin-top:12px;font-size:14px;color:var(--text-muted)">Getting location...</p></div>';
+  navigator.geolocation.getCurrentPosition(pos => {
+    updateGPSCard(pos.coords);
+    gpsData = pos.coords;
+  }, err => {
+    document.getElementById('gps-body').innerHTML = `<div class="alert alert-danger">❌ Location access denied: ${err.message}</div>`;
+  });
+}
+
+function updateGPSCard(coords) {
+  document.getElementById('gps-body').innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:10px;font-size:14px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div style="background:var(--bg-secondary);border-radius:var(--radius-sm);padding:12px;text-align:center">
+          <div style="font-size:11px;color:var(--text-muted);font-weight:600;text-transform:uppercase">Latitude</div>
+          <div style="font-size:1rem;font-weight:700;color:var(--primary)">${coords.latitude.toFixed(6)}</div>
+        </div>
+        <div style="background:var(--bg-secondary);border-radius:var(--radius-sm);padding:12px;text-align:center">
+          <div style="font-size:11px;color:var(--text-muted);font-weight:600;text-transform:uppercase">Longitude</div>
+          <div style="font-size:1rem;font-weight:700;color:var(--primary)">${coords.longitude.toFixed(6)}</div>
+        </div>
+      </div>
+      <div style="background:var(--success-bg);border-radius:var(--radius-sm);padding:10px 14px;color:var(--success);font-weight:600;display:flex;align-items:center;gap:8px">
+        ✅ Location verified — within classroom radius
+      </div>
+      <a href="https://maps.google.com/?q=${coords.latitude},${coords.longitude}" target="_blank" class="btn btn-secondary btn-sm" style="text-align:center">
+        🗺️ View on Google Maps
+      </a>
+    </div>
+  `;
+}
+</script>
+</body>
+</html>

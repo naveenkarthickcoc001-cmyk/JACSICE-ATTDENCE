@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Marks Dashboard — SmartAttend</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .program-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl, 20px);
+      padding: 36px 28px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.25s;
+      box-shadow: var(--shadow-sm);
+      text-decoration: none;
+      display: block;
+      color: var(--text);
+    }
+    .program-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-xl); border-color: var(--primary); }
+    .program-card .prog-icon { font-size: 56px; margin-bottom: 16px; display: block; }
+    .program-card h2 { font-size: 1.5rem; font-weight: 800; margin-bottom: 8px; }
+    .program-card p { font-size: 14px; color: var(--text-muted); margin-bottom: 20px; }
+    .program-card .prog-count { display: inline-block; background: var(--primary-50); color: var(--primary); border-radius: 999px; padding: 6px 18px; font-weight: 700; font-size: 14px; }
+  </style>
+</head>
+<body>
+<div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">🎓</div>
+    <div><div class="brand-name">SmartAttend</div><div class="brand-sub">College Edition</div></div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">
+      <div class="nav-section-label">Main</div>
+      <a class="nav-item" href="dashboard.html"><span class="nav-icon">📊</span> Dashboard</a>
+      <a class="nav-item" href="users.html"><span class="nav-icon">👨‍🎓</span> Students</a>
+      <a class="nav-item" href="attendance.html"><span class="nav-icon">📋</span> Attendance</a>
+      <a class="nav-item" href="departments.html"><span class="nav-icon">🏫</span> Departments</a>
+      <a class="nav-item" href="approvals.html"><span class="nav-icon">✅</span> Approvals <span class="nav-badge">3</span></a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">Attendance</div>
+      <a class="nav-item" href="qr-generate.html"><span class="nav-icon">📷</span> Generate QR</a>
+      <a class="nav-item" href="qr-scan.html"><span class="nav-icon">🔍</span> Scan QR</a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">Marks</div>
+      <a class="nav-item active" href="marks.html"><span class="nav-icon">📝</span> Marks Dashboard</a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">Analytics</div>
+      <a class="nav-item" href="reports.html"><span class="nav-icon">📈</span> Reports</a>
+      <a class="nav-item" href="schedule.html"><span class="nav-icon">📅</span> Schedule</a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">Account</div>
+      <a class="nav-item" href="settings.html"><span class="nav-icon">⚙️</span> Settings</a>
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-info">
+      <div class="user-avatar" data-user-avatar>AU</div>
+      <div><div class="user-name" data-user-name>Admin</div><div class="user-role" data-user-role>Admin</div></div>
+    </div>
+    <button class="nav-item" data-logout style="margin-top:4px;color:var(--danger)"><span class="nav-icon">🚪</span> Logout</button>
+  </div>
+</aside>
+
+<header class="app-header">
+  <div class="header-left">
+    <button class="sidebar-toggle" id="sidebar-toggle">☰</button>
+    <div><div class="page-title">Marks Dashboard</div><div class="page-breadcrumb">Select UG or PG program to enter and view IAT marks</div></div>
+  </div>
+  <div class="header-right" id="marks-header-actions">
+    <a href="departments.html" class="btn btn-secondary btn-sm">+ Add Department</a>
+  </div>
+</header>
+
+<main class="main-content">
+  <!-- Breadcrumb trail -->
+  <div class="breadcrumb-trail" style="margin-bottom:28px">
+    <span class="breadcrumb-item active">🏠 Programs</span>
+  </div>
+
+  <div style="text-align:center;margin-bottom:36px">
+    <h2 style="font-size:1.8rem;font-weight:800;color:var(--text)">Select Program</h2>
+    <p style="color:var(--text-muted);font-size:15px;margin-top:6px">Choose between UG (Under Graduate) and PG (Post Graduate) to manage student marks</p>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:760px;margin:0 auto" id="program-grid"></div>
+</main>
+
+<script src="demo-data.js"></script>
+<script src="app.js"></script>
+<script>
+// If student, redirect directly to their own department's marksheet
+document.addEventListener('DOMContentLoaded', () => {
+  const user = currentUser();
+  if (user.role === 'student') {
+    if (user.deptId) {
+      const d = DEMO_DEPARTMENTS.find(x => x.id === user.deptId);
+      if (d) {
+        sessionStorage.setItem('m_prog', d.program);
+        sessionStorage.setItem('m_dept', user.deptId);
+        sessionStorage.setItem('m_year', user.year || 1);
+        sessionStorage.setItem('m_sec',  user.section || 'A');
+        window.location.href = 'marks-detail.html?uid=' + user.id;
+        return;
+      }
+    }
+  }
+
+  // Hide admin actions if not admin/teacher
+  if (isStudent()) {
+    document.getElementById('marks-header-actions').style.display = 'none';
+  }
+
+  renderProgramCards();
+});
+
+function renderProgramCards() {
+  const programs = [
+    { type: 'UG', title: 'UG Programs', subtitle: '4-Year Under Graduate (B.E. / B.Tech / B.Sc)', icon: '🎓' },
+    { type: 'PG', title: 'PG Programs', subtitle: '2-Year Post Graduate (M.E. / M.Tech / MCA / MBA)', icon: '🏆' }
+  ];
+
+  document.getElementById('program-grid').innerHTML = programs.map(prog => {
+    const depts = DEMO_DEPARTMENTS.filter(d => d.program === prog.type);
+    return `
+      <a class="program-card" href="marks-dept.html?prog=${prog.type}" onclick="sessionStorage.setItem('m_prog','${prog.type}')">
+        <span class="prog-icon">${prog.icon}</span>
+        <h2>${prog.title}</h2>
+        <p>${prog.subtitle}</p>
+        <span class="prog-count">${depts.length} Department${depts.length !== 1 ? 's' : ''}</span>
+      </a>`;
+  }).join('');
+}
+</script>
+</body>
+</html>
