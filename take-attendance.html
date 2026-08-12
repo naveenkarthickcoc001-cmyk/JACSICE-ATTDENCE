@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mark Attendance — SmartAttend</title>
+  <meta name="description" content="Manually mark student attendance by selecting program, department, year, and section." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .att-toggle-group {
+      display: inline-flex;
+      background: var(--bg-surface-secondary, #f1f5f9);
+      padding: 4px;
+      border-radius: 8px;
+      gap: 4px;
+    }
+    .att-btn {
+      border: none;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: transparent;
+      color: var(--text-muted, #64748b);
+    }
+    .att-btn.active-present {
+      background: #10b981;
+      color: #ffffff;
+      box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+    }
+    .att-btn.active-absent {
+      background: #ef4444;
+      color: #ffffff;
+      box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+    }
+    .att-btn.active-late {
+      background: #f59e0b;
+      color: #ffffff;
+      box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);
+    }
+    .selection-card {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.05));
+      margin-bottom: 24px;
+      border: 1px solid var(--border-color, #e2e8f0);
+    }
+    .grid-filters {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 14px;
+    }
+  </style>
+</head>
+<body>
+<div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">🎓</div>
+    <div><div class="brand-name">SmartAttend</div><div class="brand-sub">College Edition</div></div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">
+      <div class="nav-section-label">Main</div>
+      <a class="nav-item" href="dashboard.html"><span class="nav-icon">📊</span> Dashboard</a>
+      <a class="nav-item" href="users.html"><span class="nav-icon">👨‍🎓</span> Students</a>
+      <a class="nav-item" href="attendance.html"><span class="nav-icon">📋</span> Attendance Log</a>
+      <a class="nav-item" href="departments.html"><span class="nav-icon">🏫</span> Departments</a>
+      <a class="nav-item" href="approvals.html"><span class="nav-icon">✅</span> Approvals <span class="nav-badge">3</span></a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">Attendance</div>
+      <a class="nav-item active" href="take-attendance.html"><span class="nav-icon">✍️</span> Mark Attendance</a>
+      <a class="nav-item" href="attendance.html"><span class="nav-icon">📋</span> Attendance Log</a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">Marks</div>
+      <a class="nav-item" href="marks.html"><span class="nav-icon">📝</span> Marks Dashboard</a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">Analytics</div>
+      <a class="nav-item" href="reports.html"><span class="nav-icon">📈</span> Reports</a>
+      <a class="nav-item" href="schedule.html"><span class="nav-icon">📅</span> Schedule</a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">Account</div>
+      <a class="nav-item" href="settings.html"><span class="nav-icon">⚙️</span> Settings</a>
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-info">
+      <div class="user-avatar" data-user-avatar>AU</div>
+      <div><div class="user-name" data-user-name>Admin User</div><div class="user-role" data-user-role>Admin</div></div>
+    </div>
+    <button class="nav-item" data-logout style="margin-top:4px;color:var(--danger)"><span class="nav-icon">🚪</span> Logout</button>
+  </div>
+</aside>
+
+<header class="app-header">
+  <div class="header-left">
+    <button class="sidebar-toggle" id="sidebar-toggle">☰</button>
+    <div><div class="page-title">Mark Manual Attendance</div><div class="page-breadcrumb">Select class details and mark student status</div></div>
+  </div>
+  <div class="header-right">
+    <button class="btn btn-secondary btn-sm" onclick="markAll('present')">✅ Mark All Present</button>
+    <button class="btn btn-secondary btn-sm" onclick="markAll('absent')">❌ Mark All Absent</button>
+    <button class="btn btn-primary btn-sm" onclick="saveAttendance()">💾 Save Attendance</button>
+  </div>
+</header>
+
+<main class="main-content">
+
+  <!-- Class Selection Filters -->
+  <div class="selection-card">
+    <h3 style="font-size:15px;font-weight:700;margin-bottom:16px;color:var(--text)">📌 Select Session Details</h3>
+    <div class="grid-filters">
+      <div class="form-group">
+        <label class="form-label">Program</label>
+        <select class="form-control" id="sel-program" onchange="loadStudents()">
+          <option value="UG">UG (Undergraduate)</option>
+          <option value="PG">PG (Postgraduate)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Department</label>
+        <select class="form-control" id="sel-dept" onchange="loadStudents()"></select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Year / Class</label>
+        <select class="form-control" id="sel-year" onchange="loadStudents()">
+          <option value="1">Year 1</option>
+          <option value="2" selected>Year 2</option>
+          <option value="3">Year 3</option>
+          <option value="4">Year 4</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Section</label>
+        <select class="form-control" id="sel-section" onchange="loadStudents()">
+          <option value="A">Section A</option>
+          <option value="B">Section B</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Date</label>
+        <input type="date" class="form-control" id="sel-date" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Student List Table -->
+  <div class="card">
+    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <span class="card-title">👨‍🎓 Student Roster</span>
+        <span style="font-size:13px;color:var(--text-muted);margin-left:8px" id="student-count">0 students</span>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost btn-sm" onclick="markAll('present')">Set All Present</button>
+        <button class="btn btn-ghost btn-sm" onclick="markAll('absent')">Set All Absent</button>
+      </div>
+    </div>
+
+    <div class="table-container" style="border:none;border-radius:0">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Roll No</th>
+            <th>Student Name</th>
+            <th>Class / Section</th>
+            <th>Status Selection</th>
+          </tr>
+        </thead>
+        <tbody id="student-roster-tbody"></tbody>
+      </table>
+    </div>
+
+    <div class="card-footer" style="display:flex;justify-content:space-between;align-items:center">
+      <div style="font-size:13px;color:var(--text-muted)" id="summary-badge">Summary: 0 Present, 0 Absent, 0 Late</div>
+      <button class="btn btn-primary" onclick="saveAttendance()">💾 Save Attendance</button>
+    </div>
+  </div>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="demo-data.js"></script>
+<script src="app.js"></script>
+<script>
+let currentStudentState = {};
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Set default date to today
+  document.getElementById('sel-date').value = new Date().toISOString().split('T')[0];
+
+  // Populate departments
+  const deptEl = document.getElementById('sel-dept');
+  deptEl.innerHTML = DEMO_DEPARTMENTS.map(d => `<option value="${d.id}">${d.code} - ${d.name}</option>`).join('');
+
+  loadStudents();
+});
+
+function loadStudents() {
+  const deptId = document.getElementById('sel-dept').value;
+  const year = parseInt(document.getElementById('sel-year').value);
+  const section = document.getElementById('sel-section').value;
+  const program = document.getElementById('sel-program').value;
+
+  // Filter students by role, dept, year, section
+  let list = DEMO_USERS.filter(u => u.role === 'student');
+  if (deptId) list = list.filter(u => u.deptId === deptId || !u.deptId);
+  if (year) list = list.filter(u => !u.year || u.year === year);
+  if (section) list = list.filter(u => !u.section || u.section === section);
+
+  // Initialize state
+  currentStudentState = {};
+  list.forEach(s => {
+    currentStudentState[s.id] = 'present'; // Default present
+  });
+
+  renderRoster(list);
+}
+
+function setStatus(studentId, status) {
+  currentStudentState[studentId] = status;
+  renderRosterButtons(studentId);
+  updateSummary();
+}
+
+function markAll(status) {
+  Object.keys(currentStudentState).forEach(id => {
+    currentStudentState[id] = status;
+    renderRosterButtons(id);
+  });
+  updateSummary();
+}
+
+function renderRoster(list) {
+  const tbody = document.getElementById('student-roster-tbody');
+  document.getElementById('student-count').textContent = `${list.length} student${list.length !== 1 ? 's' : ''}`;
+
+  if (!list.length) {
+    tbody.innerHTML = `<tr><td colspan="4"><div class="empty-state" style="padding:30px"><div class="empty-icon">👨‍🎓</div><p>No students found for selected filters</p></div></td></tr>`;
+    updateSummary();
+    return;
+  }
+
+  const deptObj = DEMO_DEPARTMENTS.find(d => d.id === document.getElementById('sel-dept').value) || { code: 'CSE' };
+  const year = document.getElementById('sel-year').value;
+  const sec = document.getElementById('sel-section').value;
+
+  tbody.innerHTML = list.map((s, idx) => `
+    <tr>
+      <td><code style="font-weight:700;color:var(--primary)">${s.rollNo || ('REG' + (1000 + idx))}</code></td>
+      <td>
+        <div style="display:flex;align-items:center;gap:10px">
+          ${avatarHtml(s.name)}
+          <div>
+            <div style="font-weight:600">${s.name}</div>
+            <div style="font-size:12px;color:var(--text-muted)">${s.email}</div>
+          </div>
+        </div>
+      </td>
+      <td><span class="badge badge-primary">${deptObj.code} - Yr ${year} (${sec})</span></td>
+      <td>
+        <div class="att-toggle-group" id="btn-group-${s.id}">
+          <!-- Buttons rendered dynamically -->
+        </div>
+      </td>
+    </tr>
+  `).join('');
+
+  list.forEach(s => renderRosterButtons(s.id));
+  updateSummary();
+}
+
+function renderRosterButtons(studentId) {
+  const group = document.getElementById(`btn-group-${studentId}`);
+  if (!group) return;
+
+  const current = currentStudentState[studentId] || 'present';
+  group.innerHTML = `
+    <button type="button" class="att-btn ${current === 'present' ? 'active-present' : ''}" onclick="setStatus('${studentId}', 'present')">✅ Present</button>
+    <button type="button" class="att-btn ${current === 'absent' ? 'active-absent' : ''}" onclick="setStatus('${studentId}', 'absent')">❌ Absent</button>
+    <button type="button" class="att-btn ${current === 'late' ? 'active-late' : ''}" onclick="setStatus('${studentId}', 'late')">⏰ Late</button>
+  `;
+}
+
+function updateSummary() {
+  const values = Object.values(currentStudentState);
+  const present = values.filter(v => v === 'present').length;
+  const absent = values.filter(v => v === 'absent').length;
+  const late = values.filter(v => v === 'late').length;
+
+  document.getElementById('summary-badge').textContent = `Summary: ${present} Present, ${absent} Absent, ${late} Late`;
+}
+
+async function saveAttendance() {
+  const deptObj = DEMO_DEPARTMENTS.find(d => d.id === document.getElementById('sel-dept').value) || { code: 'CSE' };
+  const program = document.getElementById('sel-program').value;
+  const year = document.getElementById('sel-year').value;
+  const sec = document.getElementById('sel-section').value;
+  const subject = 'General';
+  const date = document.getElementById('sel-date').value;
+
+  const studentIds = Object.keys(currentStudentState);
+  if (!studentIds.length) {
+    showToast('No students to save attendance for', 'warning');
+    return;
+  }
+
+  const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+  const newRecords = [];
+  studentIds.forEach(id => {
+    const student = DEMO_USERS.find(u => u.id === id) || { name: 'Student' };
+    const status = currentStudentState[id];
+
+    const record = {
+      id: 'att_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+      name: student.name,
+      class: `${deptObj.code}-${sec}`,
+      subject: subject,
+      date: date,
+      checkIn: status === 'absent' ? '--' : nowTime,
+      checkOut: status === 'absent' ? '--' : '05:00 PM',
+      status: status,
+      method: 'Manual'
+    };
+
+    newRecords.push(record);
+    DEMO_ATTENDANCE.unshift(record);
+  });
+
+  // Save local storage
+  saveStorage('attendance', DEMO_ATTENDANCE);
+
+  // Sync batch to Supabase if client is ready
+  if (typeof supabaseClient !== 'undefined' && supabaseClient !== null) {
+    try {
+      const dbPayload = newRecords.map(r => ({
+        student_name: r.name,
+        program: program,
+        dept: deptObj.code,
+        year: parseInt(year),
+        section: sec,
+        class_label: `${program} - ${deptObj.code} - Year ${year} (${sec})`,
+        subject: r.subject,
+        attendance_date: r.date,
+        check_in: r.checkIn,
+        check_out: r.checkOut,
+        status: r.status,
+        method: 'Manual'
+      }));
+
+      const { error } = await supabaseClient.from('attendance_logs').insert(dbPayload);
+      if (error) {
+        console.warn('Supabase insert warning:', error.message);
+      } else {
+        console.log('Batch attendance synced to Supabase successfully ✅');
+      }
+    } catch(e) {
+      console.error('Supabase error:', e);
+    }
+  }
+
+  showToast(`Attendance saved for ${newRecords.length} students! ✅`, 'success');
+
+  setTimeout(() => {
+    window.location.href = 'attendance.html';
+  }, 1200);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Register — SmartAttend</title>
+  <meta name="description" content="Register for SmartAttend — verification required from teacher or admin." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="auth-body">
+
+  <div class="auth-side">
+    <div class="brand-logo">🎓</div>
+    <h2>Join SmartAttend</h2>
+    <p>Set up your college attendance account — free forever.</p>
+    <div class="feature-list">
+      <div class="feature-item">🎁 Free forever — no credit card</div>
+      <div class="feature-item">🔒 Verified by your teacher/admin</div>
+      <div class="feature-item">📊 View your marks &amp; attendance</div>
+      <div class="feature-item">📷 QR code check-in</div>
+    </div>
+    <div style="margin-top:32px;background:rgba(255,255,255,0.1);border-radius:12px;padding:14px 16px">
+      <p style="color:rgba(255,255,255,0.9);font-size:13px;font-weight:600;margin-bottom:6px">⚠️ Verification Required</p>
+      <p style="color:rgba(255,255,255,0.7);font-size:12px">New student registrations must be approved by your teacher or admin before you can log in.</p>
+    </div>
+    <p style="color:rgba(255,255,255,0.5);font-size:12px;margin-top:24px">© 2026 SmartAttend</p>
+  </div>
+
+  <div class="auth-main" style="max-width:560px">
+    <div class="auth-box animate-fade-in" style="width:100%">
+      <a href="login.html" style="font-size:13px;color:var(--text-muted);display:inline-flex;align-items:center;gap:6px;margin-bottom:20px;text-decoration:none">← Back to Login</a>
+      <h1>Create Account</h1>
+      <p class="auth-sub">Register for SmartAttend (requires teacher/admin approval)</p>
+
+      <!-- College Code verify -->
+      <div id="reg-college-verify" style="background:var(--bg-secondary);border-radius:var(--radius);padding:14px 16px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
+        <span id="college-verify-icon" style="font-size:20px">🏛️</span>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:600" id="college-verify-label">Enter college code first</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="text" id="reg-college-code" class="form-control" placeholder="Enter College Code" style="width:160px;text-transform:uppercase;font-weight:700;letter-spacing:0.05em" />
+          <button class="btn btn-secondary btn-sm" onclick="verifyCollegeReg()">Verify</button>
+        </div>
+      </div>
+
+      <!-- Role Tabs -->
+      <div class="role-tabs">
+        <button type="button" class="role-tab"        data-role="admin"   id="reg-tab-admin"   onclick="selectRole('admin')">🔑 Admin</button>
+        <button type="button" class="role-tab active" data-role="teacher" id="reg-tab-teacher" onclick="selectRole('teacher')">👩‍🏫 Teacher</button>
+        <button type="button" class="role-tab"        data-role="student" id="reg-tab-student" onclick="selectRole('student')">👨‍🎓 Student</button>
+      </div>
+
+      <div class="alert alert-warning" style="padding:10px 14px;margin-bottom:16px" id="role-info">
+        <span>ℹ️</span>
+        <span id="role-info-text">Teacher registration requires admin approval.</span>
+      </div>
+
+      <form id="register-form" novalidate>
+        <div style="display:flex;flex-direction:column;gap:14px">
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+            <div class="form-group"><label class="form-label">First Name *</label><input type="text" class="form-control" id="reg-first" placeholder="Arjun" required /></div>
+            <div class="form-group"><label class="form-label">Last Name *</label><input type="text" class="form-control" id="reg-last" placeholder="Sharma" required /></div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Email *</label>
+            <div class="input-group"><span class="input-icon">✉️</span><input type="email" class="form-control" id="reg-email" placeholder="you@college.edu" required /></div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Phone *</label>
+            <div class="input-group"><span class="input-icon">📱</span><input type="tel" class="form-control" id="reg-phone" placeholder="9876543210" required /></div>
+          </div>
+
+          <!-- Student fields -->
+          <div id="student-fields" style="display:none;flex-direction:column;gap:14px">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+              <div class="form-group">
+                <label class="form-label">Department</label>
+                <select class="form-control" id="reg-dept" onchange="updateSections()">
+                  <option value="">Select...</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Program</label>
+                <select class="form-control" id="reg-program" onchange="filterDepts()">
+                  <option value="UG">UG (Under Graduate)</option>
+                  <option value="PG">PG (Post Graduate)</option>
+                </select>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px">
+              <div class="form-group">
+                <label class="form-label">Year</label>
+                <select class="form-control" id="reg-year" onchange="updateSections()">
+                  <option value="1">Year 1</option>
+                  <option value="2" selected>Year 2</option>
+                  <option value="3">Year 3</option>
+                  <option value="4">Year 4</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Section</label>
+                <select class="form-control" id="reg-section"></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Roll Number</label>
+                <input type="text" class="form-control" id="reg-rollno" placeholder="CSE21A001" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Teacher fields -->
+          <div id="teacher-fields" style="display:flex;flex-direction:column;gap:14px">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+              <div class="form-group">
+                <label class="form-label">Department</label>
+                <select class="form-control" id="reg-teacher-dept">
+                  <option value="">Select...</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Subject / Specialisation</label>
+                <input type="text" class="form-control" id="reg-subject" placeholder="Data Structures" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Admin fields -->
+          <div id="admin-fields" style="display:none">
+            <div class="alert alert-info" style="padding:10px 14px">
+              <span>🔑</span><span>Admin accounts require special approval from the institution.</span>
+            </div>
+          </div>
+
+          <!-- Password -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+            <div class="form-group"><label class="form-label">Password *</label><input type="password" class="form-control" id="reg-password" placeholder="Min 8 chars" required /></div>
+            <div class="form-group"><label class="form-label">Confirm *</label><input type="password" class="form-control" id="reg-confirm" placeholder="Repeat password" required /></div>
+          </div>
+
+          <div style="display:flex;align-items:flex-start;gap:10px;font-size:14px;color:var(--text-secondary)">
+            <input type="checkbox" id="reg-terms" style="margin-top:3px;accent-color:var(--primary)" required />
+            <label for="reg-terms">I agree to the <a href="#">Terms of Service</a> and understand my account requires approval before login.</label>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-lg w-full" id="register-submit-btn">Submit Registration 📨</button>
+        </div>
+      </form>
+
+      <div class="form-divider">or</div>
+      <div style="text-align:center;font-size:14px;color:var(--text-muted)">
+        Already have an account? <a href="login.html" style="color:var(--primary);font-weight:600;margin-left:4px">Sign in</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- OTP Verification Modal -->
+  <div class="modal-overlay" id="otp-modal">
+    <div class="modal" style="max-width:440px">
+      <div class="modal-body" style="text-align:center;padding:36px 28px">
+        <div style="font-size:48px;margin-bottom:12px">📧</div>
+        <h2 style="font-size:1.3rem;margin-bottom:6px">Verify Your Gmail</h2>
+        <p style="color:var(--text-muted);font-size:13px;margin-bottom:20px">
+          We sent a 6-digit verification code to<br/>
+          <strong id="otp-email-target" style="color:var(--text-main)">user@gmail.com</strong>
+        </p>
+
+        <!-- 6 OTP Input Boxes -->
+        <div class="otp-inputs" style="display:flex;justify-content:center;gap:8px;margin-bottom:20px">
+          <input type="text" class="otp-box" maxlength="1" id="otp-1" autocomplete="off" />
+          <input type="text" class="otp-box" maxlength="1" id="otp-2" autocomplete="off" />
+          <input type="text" class="otp-box" maxlength="1" id="otp-3" autocomplete="off" />
+          <input type="text" class="otp-box" maxlength="1" id="otp-4" autocomplete="off" />
+          <input type="text" class="otp-box" maxlength="1" id="otp-5" autocomplete="off" />
+          <input type="text" class="otp-box" maxlength="1" id="otp-6" autocomplete="off" />
+        </div>
+
+        <style>
+          .otp-box {
+            width: 48px; height: 54px; text-align: center; font-size: 22px; font-weight: 700;
+            border: 2px solid var(--border); border-radius: 8px; background: var(--bg-surface);
+            transition: all 0.2s ease; color: var(--text-main);
+          }
+          .otp-box:focus {
+            border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+          }
+        </style>
+
+        <button class="btn btn-primary btn-lg w-full" id="otp-verify-btn" onclick="submitOTPVerification()">Verify & Complete →</button>
+
+        <div style="margin-top:16px;display:flex;justify-content:space-between;align-items:center;font-size:13px">
+          <span style="color:var(--text-muted)" id="otp-timer-text">Resend code in <strong id="otp-timer">30</strong>s</span>
+          <button class="btn btn-ghost btn-sm" id="otp-resend-btn" onclick="resendOTPCode()" disabled>Resend Code</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success Modal -->
+  <div class="modal-overlay" id="success-modal">
+    <div class="modal">
+      <div class="modal-body" style="text-align:center;padding:48px 32px">
+        <div style="font-size:64px;margin-bottom:16px">📨</div>
+        <h2 style="font-size:1.4rem;margin-bottom:10px">Registration Submitted!</h2>
+        <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px">
+          Your registration has been submitted. Your teacher or admin will review and approve your account. You'll be able to login once approved.
+        </p>
+        <div style="background:var(--primary-50);border-radius:var(--radius);padding:14px;text-align:left;font-size:14px;margin-bottom:24px" id="success-summary"></div>
+        <a href="login.html" class="btn btn-primary btn-lg w-full">Go to Login</a>
+      </div>
+    </div>
+  </div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="demo-data.js"></script>
+<script src="app.js"></script>
+<script>
+let collegeVerified = false;
+let generatedOTP = '';
+let currentRegistrationDraft = null;
+let otpCountdownTimer = null;
+
+// Populate dept dropdowns reliably
+async function populateDepts(program = 'UG') {
+  let deptsList = (typeof DEMO_DEPARTMENTS !== 'undefined' && Array.isArray(DEMO_DEPARTMENTS) && DEMO_DEPARTMENTS.length > 0)
+    ? DEMO_DEPARTMENTS
+    : [
+        { id: 'd1', name: 'Computer Science & Engineering', code: 'CSE', program: 'UG', years: 4 },
+        { id: 'd2', name: 'Electronics & Communication',    code: 'ECE', program: 'UG', years: 4 },
+        { id: 'd3', name: 'Information Technology',         code: 'IT',  program: 'UG', years: 4 },
+      ];
+
+  // If Supabase client exists, load departments from Supabase
+  if (typeof supabaseClient !== 'undefined' && supabaseClient !== null) {
+    try {
+      const { data: dbDepts } = await supabaseClient.from('departments').select('*');
+      if (dbDepts && dbDepts.length > 0) {
+        deptsList = dbDepts;
+        if (typeof DEMO_DEPARTMENTS !== 'undefined') DEMO_DEPARTMENTS = dbDepts;
+      }
+    } catch(err) {
+      console.warn('Supabase departments load warning:', err);
+    }
+  }
+
+  // Student Department Dropdown
+  const progLower = (program || 'UG').toString().toLowerCase();
+  const studentDepts = deptsList.filter(d => !d.program || (d.program || '').toString().toLowerCase() === progLower);
+  const finalStudentDepts = studentDepts.length > 0 ? studentDepts : deptsList;
+
+  const regDeptEl = document.getElementById('reg-dept');
+  if (regDeptEl) {
+    regDeptEl.innerHTML = '<option value="">Select department...</option>' +
+      finalStudentDepts.map(d => `<option value="${d.id || d.code}">${d.code} — ${d.name}</option>`).join('');
+  }
+
+  // Teacher Department Dropdown (All Departments)
+  const teacherDeptEl = document.getElementById('reg-teacher-dept');
+  if (teacherDeptEl) {
+    teacherDeptEl.innerHTML = '<option value="">Select department...</option>' +
+      deptsList.map(d => `<option value="${d.id || d.code}">${d.code} — ${d.name}</option>`).join('');
+  }
+
+  updateSections();
+}
+
+function filterDepts() {
+  const progEl = document.getElementById('reg-program');
+  populateDepts(progEl ? progEl.value : 'UG');
+}
+
+function updateSections() {
+  const deptEl = document.getElementById('reg-dept');
+  const yearEl = document.getElementById('reg-year');
+  const secEl  = document.getElementById('reg-section');
+  if (!secEl) return;
+
+  const deptId = deptEl ? deptEl.value : 'd1';
+  const year = yearEl ? parseInt(yearEl.value || '1', 10) : 1;
+  const secs = (typeof getSections === 'function' ? getSections(deptId, year) : null) || ['A', 'B', 'C'];
+  secEl.innerHTML = secs.map(s => `<option value="${s}">${s}</option>`).join('');
+}
+
+// College verification
+function verifyCollegeReg() {
+  const codeInput = document.getElementById('reg-college-code');
+  const code = codeInput ? codeInput.value.trim().toUpperCase() : '';
+  if (code !== COLLEGE.code) { showToast('Invalid college code. Please check your code.', 'error'); return; }
+  collegeVerified = true;
+  sessionStorage.setItem('sa_college', COLLEGE.name);
+  const icon = document.getElementById('college-verify-icon');
+  const label = document.getElementById('college-verify-label');
+  if (icon) icon.textContent = '✅';
+  if (label) {
+    label.textContent = COLLEGE.name + ' — Verified';
+    label.style.color = 'var(--success)';
+  }
+  showToast('College verified!', 'success');
+}
+
+// Role switching
+const roleInfoMap = {
+  student: 'Student registration requires approval from your class teacher or admin.',
+  teacher: 'Teacher registration requires admin approval.',
+  admin:   'Admin registration requires institutional verification.',
+};
+
+window.selectRole = function(role) {
+  document.querySelectorAll('.role-tab').forEach(t => {
+    const isTarget = t.dataset.role === role;
+    if (isTarget) {
+      t.classList.add('active');
+      t.style.background = 'var(--surface)';
+      t.style.color = 'var(--primary)';
+      t.style.fontWeight = '700';
+      t.style.boxShadow = 'var(--shadow-sm)';
+    } else {
+      t.classList.remove('active');
+      t.style.background = 'transparent';
+      t.style.color = 'var(--text-muted)';
+      t.style.fontWeight = '500';
+      t.style.boxShadow = 'none';
+    }
+  });
+
+  const studentEl = document.getElementById('student-fields');
+  const teacherEl = document.getElementById('teacher-fields');
+  const adminEl   = document.getElementById('admin-fields');
+
+  if (studentEl) studentEl.style.display = (role === 'student') ? 'flex' : 'none';
+  if (teacherEl) teacherEl.style.display = (role === 'teacher') ? 'flex' : 'none';
+  if (adminEl)   adminEl.style.display   = (role === 'admin')   ? 'block' : 'none';
+
+  const infoEl = document.getElementById('role-info-text');
+  if (infoEl) infoEl.textContent = roleInfoMap[role] || '';
+
+  populateDepts(document.getElementById('reg-program')?.value || 'UG');
+};
+
+// Initialize on DOM load
+document.addEventListener('DOMContentLoaded', () => {
+  selectRole('teacher');
+  populateDepts('UG');
+});
+// Immediate fallback execution
+selectRole('teacher');
+populateDepts('UG');
+
+// OTP Helpers
+function generateOTP() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+function startOTPTimer() {
+  let seconds = 30;
+  const timerEl = document.getElementById('otp-timer');
+  const timerTextEl = document.getElementById('otp-timer-text');
+  const resendBtn = document.getElementById('otp-resend-btn');
+  resendBtn.disabled = true;
+  timerTextEl.style.display = 'inline';
+
+  if (otpCountdownTimer) clearInterval(otpCountdownTimer);
+
+  otpCountdownTimer = setInterval(() => {
+    seconds--;
+    if (timerEl) timerEl.textContent = seconds;
+    if (seconds <= 0) {
+      clearInterval(otpCountdownTimer);
+      timerTextEl.style.display = 'none';
+      resendBtn.disabled = false;
+    }
+  }, 1000);
+}
+
+function getDailyResendKey(email) {
+  const today = new Date().toISOString().split('T')[0];
+  return `sa_resends_${email.toLowerCase().trim()}_${today}`;
+}
+
+function getDailyResendCount(email) {
+  return parseInt(localStorage.getItem(getDailyResendKey(email)) || '0', 10);
+}
+
+function incrementDailyResendCount(email) {
+  const count = getDailyResendCount(email) + 1;
+  localStorage.setItem(getDailyResendKey(email), count);
+  return count;
+}
+
+async function sendOTPToUser(email) {
+  const count = getDailyResendCount(email);
+  if (count >= 5) {
+    showToast('⚠️ Maximum 5 OTP resends reached for today. Please try again tomorrow.', 'error', 5000);
+    const resendBtn = document.getElementById('otp-resend-btn');
+    if (resendBtn) resendBtn.disabled = true;
+    return false;
+  }
+
+  generatedOTP = generateOTP();
+  document.getElementById('otp-email-target').textContent = email;
+
+  for (let i = 1; i <= 6; i++) {
+    const el = document.getElementById(`otp-${i}`);
+    if (el) el.value = '';
+  }
+
+  // Trigger Supabase real verification email / OTP if client is available
+  if (typeof supabaseClient !== 'undefined' && supabaseClient !== null && currentRegistrationDraft) {
+    try {
+      const { data, error } = await supabaseClient.auth.signUp({
+        email: email,
+        password: currentRegistrationDraft.password,
+        options: {
+          data: {
+            full_name: currentRegistrationDraft.name,
+            role: currentRegistrationDraft.role,
+            department: currentRegistrationDraft.deptId,
+            register_number: currentRegistrationDraft.rollNo || ''
+          }
+        }
+      });
+      if (error) {
+        console.warn('Supabase Auth signUp note:', error.message);
+      } else {
+        console.log('Real verification email / OTP sent via Supabase ✅');
+      }
+    } catch(e) {
+      console.warn('Supabase signUp warning:', e);
+    }
+  }
+
+  incrementDailyResendCount(email);
+  showToast(`📩 OTP Code sent to ${email}. (Daily resends remaining: ${5 - (count + 1)})`, 'info');
+  startOTPTimer();
+  openModal('otp-modal');
+  setTimeout(() => { document.getElementById('otp-1').focus(); }, 300);
+  return true;
+}
+
+function resendOTPCode() {
+  if (!currentRegistrationDraft) return;
+  const count = getDailyResendCount(currentRegistrationDraft.email);
+  if (count >= 5) {
+    showToast('⚠️ Maximum 5 OTP resends reached for today. Please try again tomorrow.', 'error', 5000);
+    document.getElementById('otp-resend-btn').disabled = true;
+    return;
+  }
+  sendOTPToUser(currentRegistrationDraft.email);
+}
+
+async function submitOTPVerification() {
+  let enteredOTP = '';
+  for (let i = 1; i <= 6; i++) {
+    enteredOTP += (document.getElementById(`otp-${i}`).value || '').trim();
+  }
+
+  if (enteredOTP.length < 6) {
+    showToast('Please enter all 6 digits of the OTP code', 'error');
+    return;
+  }
+
+  let verified = false;
+
+  // Real Supabase OTP verification
+  if (typeof supabaseClient !== 'undefined' && supabaseClient !== null && currentRegistrationDraft) {
+    try {
+      const { data, error } = await supabaseClient.auth.verifyOtp({
+        email: currentRegistrationDraft.email,
+        token: enteredOTP,
+        type: 'signup'
+      });
+      if (!error && data?.session) {
+        verified = true;
+      }
+    } catch(e) {
+      console.warn('Supabase verifyOtp fallback:', e);
+    }
+  }
+
+  // Fallback check against generated OTP code
+  if (!verified && enteredOTP === generatedOTP) {
+    verified = true;
+  }
+
+  if (!verified) {
+    showToast('Invalid OTP code. Please enter the correct code sent to your email.', 'error');
+    return;
+  }
+
+  closeModal('otp-modal');
+  showToast('Email verified successfully! ✅', 'success');
+
+  if (currentRegistrationDraft) {
+    currentRegistrationDraft.emailVerified = true;
+    DEMO_PENDING.push(currentRegistrationDraft);
+    saveStorage('pending', DEMO_PENDING);
+
+    const first = document.getElementById('reg-first').value.trim();
+    const last  = document.getElementById('reg-last').value.trim();
+    const email = document.getElementById('reg-email').value.trim();
+    const role  = document.querySelector('.role-tab.active').dataset.role;
+    const deptId = role === 'student' ? document.getElementById('reg-dept').value : document.getElementById('reg-teacher-dept').value;
+    const dept = DEMO_DEPARTMENTS.find(d => d.id === deptId);
+
+    document.getElementById('success-summary').innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div>👤 <strong>${first} ${last}</strong></div>
+        <div>📧 ${email} <span style="color:var(--success);font-weight:700">✓ Gmail Verified</span></div>
+        <div>🎭 Role: ${role.charAt(0).toUpperCase()+role.slice(1)}</div>
+        ${dept ? `<div>🏫 Department: ${dept.code} — ${dept.name}</div>` : ''}
+        ${currentRegistrationDraft.rollNo ? `<div>🪪 Roll No: ${currentRegistrationDraft.rollNo}</div>` : ''}
+        <div>📅 Applied: ${currentRegistrationDraft.appliedDate}</div>
+        <div style="color:var(--warning);font-weight:600;margin-top:4px">⏳ Status: Pending Approval</div>
+      </div>
+    `;
+    openModal('success-modal');
+  }
+}
+
+// Attach OTP Box auto-advance events
+for (let i = 1; i <= 6; i++) {
+  const input = document.getElementById(`otp-${i}`);
+  if (!input) continue;
+
+  input.addEventListener('input', (e) => {
+    const val = e.target.value;
+    if (val.length === 1 && i < 6) {
+      document.getElementById(`otp-${i + 1}`).focus();
+    }
+  });
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Backspace' && !e.target.value && i > 1) {
+      document.getElementById(`otp-${i - 1}`).focus();
+    }
+  });
+
+  input.addEventListener('paste', (e) => {
+    e.preventDefault();
+    const pasted = (e.clipboardData || window.clipboardData).getData('text').trim();
+    if (/^\d{6}$/.test(pasted)) {
+      for (let j = 0; j < 6; j++) {
+        document.getElementById(`otp-${j + 1}`).value = pasted[j];
+      }
+      document.getElementById('otp-6').focus();
+    }
+  });
+}
+
+// Form submit
+document.getElementById('register-form').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const first = document.getElementById('reg-first').value.trim();
+  const last  = document.getElementById('reg-last').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const pw    = document.getElementById('reg-password').value;
+  const conf  = document.getElementById('reg-confirm').value;
+  const terms = document.getElementById('reg-terms').checked;
+  const btn   = document.getElementById('register-submit-btn');
+  const role  = document.querySelector('.role-tab.active').dataset.role;
+
+  if (!collegeVerified) { showToast('Please verify your college code first', 'error'); return; }
+  if (!first || !last || !email) { showToast('Please fill all required fields', 'error'); return; }
+  if (pw.length < 8) { showToast('Password must be at least 8 characters', 'error'); return; }
+  if (pw !== conf) { showToast('Passwords do not match', 'error'); return; }
+  if (!terms) { showToast('Please accept the terms', 'error'); return; }
+
+  btn.textContent = 'Checking email...'; btn.disabled = true;
+
+  const cleanEmail = email.toLowerCase().trim();
+
+  // 1. Check local DEMO_USERS
+  const existingUser = (typeof DEMO_USERS !== 'undefined' ? DEMO_USERS : []).find(u => u.email && u.email.toLowerCase().trim() === cleanEmail);
+  if (existingUser) {
+    btn.textContent = 'Submit Registration 📨'; btn.disabled = false;
+    showToast(`❌ This email (${cleanEmail}) is already registered. Each email address can only be used for one user account.`, 'error', 5000);
+    return;
+  }
+
+  // 2. Check DEMO_PENDING registrations
+  const pendingUser = (typeof DEMO_PENDING !== 'undefined' ? DEMO_PENDING : []).find(p => p.email && p.email.toLowerCase().trim() === cleanEmail);
+  if (pendingUser) {
+    btn.textContent = 'Submit Registration 📨'; btn.disabled = false;
+    showToast(`⚠️ An account request with ${cleanEmail} is already pending. Each email address can only be used once.`, 'warning', 5000);
+    return;
+  }
+
+  // 3. Check Supabase user_directory
+  if (typeof supabaseClient !== 'undefined' && supabaseClient !== null) {
+    try {
+      const { data: dbUser } = await supabaseClient
+        .from('user_directory')
+        .select('id, email')
+        .eq('email', cleanEmail)
+        .maybeSingle();
+
+      if (dbUser) {
+        btn.textContent = 'Submit Registration 📨'; btn.disabled = false;
+        showToast(`❌ An account with ${cleanEmail} already exists in Supabase. Each email address can only be used once.`, 'error', 5000);
+        return;
+      }
+    } catch(err) {
+      console.warn('Supabase duplicate email check warning:', err);
+    }
+  }
+
+  setTimeout(() => {
+    const deptId = role === 'student' ? document.getElementById('reg-dept').value : document.getElementById('reg-teacher-dept').value;
+    currentRegistrationDraft = {
+      id: 'p' + Date.now(),
+      name: `${first} ${last}`,
+      email: cleanEmail, role, password: pw,
+      deptId: deptId || null,
+      year: role === 'student' ? parseInt(document.getElementById('reg-year').value) : null,
+      section: role === 'student' ? document.getElementById('reg-section').value : null,
+      rollNo: role === 'student' ? document.getElementById('reg-rollno').value : null,
+      appliedDate: new Date().toISOString().split('T')[0],
+      status: 'pending',
+      collegeCode: COLLEGE.code,
+      emailVerified: false,
+    };
+
+    btn.textContent = 'Submit Registration 📨'; btn.disabled = false;
+    sendOTPToUser(cleanEmail);
+  }, 600);
+});
+</script>
+</body>
+</html>

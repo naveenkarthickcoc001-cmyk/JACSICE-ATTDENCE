@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pending Approvals — SmartAttend</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">🎓</div>
+    <div><div class="brand-name">SmartAttend</div><div class="brand-sub">College Edition</div></div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">
+      <div class="nav-section-label">Main</div>
+      <a class="nav-item" href="dashboard.html"><span class="nav-icon">📊</span> Dashboard</a>
+      <a class="nav-item" href="users.html"><span class="nav-icon">👨‍🎓</span> Students</a>
+      <a class="nav-item" href="attendance.html"><span class="nav-icon">📋</span> Attendance</a>
+      <a class="nav-item" href="departments.html"><span class="nav-icon">🏫</span> Departments</a>
+      <a class="nav-item active" href="approvals.html"><span class="nav-icon">✅</span> Approvals <span class="nav-badge" id="pending-badge">3</span></a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">Attendance</div>
+      <a class="nav-item" href="take-attendance.html"><span class="nav-icon">✍️</span> Mark Attendance</a>
+      <a class="nav-item" href="attendance.html"><span class="nav-icon">📋</span> Attendance Log</a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">Marks</div>
+      <a class="nav-item" href="marks.html"><span class="nav-icon">📝</span> Marks Dashboard</a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">Analytics</div>
+      <a class="nav-item" href="reports.html"><span class="nav-icon">📈</span> Reports</a>
+      <a class="nav-item" href="schedule.html"><span class="nav-icon">📅</span> Schedule</a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">Account</div>
+      <a class="nav-item" href="settings.html"><span class="nav-icon">⚙️</span> Settings</a>
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-info">
+      <div class="user-avatar" data-user-avatar>AU</div>
+      <div><div class="user-name" data-user-name>Admin</div><div class="user-role" data-user-role>Admin</div></div>
+    </div>
+    <button class="nav-item" data-logout style="margin-top:4px;color:var(--danger)"><span class="nav-icon">🚪</span> Logout</button>
+  </div>
+</aside>
+
+<header class="app-header">
+  <div class="header-left">
+    <button class="sidebar-toggle" id="sidebar-toggle">☰</button>
+    <div><div class="page-title">Pending Approvals</div><div class="page-breadcrumb">Review and approve new registrations</div></div>
+  </div>
+  <div class="header-right">
+    <span class="live-dot">LIVE</span>
+  </div>
+</header>
+
+<main class="main-content">
+
+  <!-- Stats -->
+  <div class="stats-grid stagger" style="grid-template-columns:repeat(3,1fr);margin-bottom:24px">
+    <div class="stat-card amber"><div class="stat-icon">⏳</div><div class="stat-info"><div class="stat-value" id="count-pending">0</div><div class="stat-label">Pending</div></div></div>
+    <div class="stat-card green"><div class="stat-icon">✅</div><div class="stat-info"><div class="stat-value" id="count-approved">0</div><div class="stat-label">Approved</div></div></div>
+    <div class="stat-card red"><div class="stat-icon">❌</div><div class="stat-info"><div class="stat-value" id="count-rejected">0</div><div class="stat-label">Rejected</div></div></div>
+  </div>
+
+  <!-- Filter Tabs -->
+  <div class="tabs" data-group="appr" style="margin-bottom:20px">
+    <button class="tab active" data-tab="pending">⏳ Pending (<span id="tab-pending-count">0</span>)</button>
+    <button class="tab" data-tab="approved">✅ Approved</button>
+    <button class="tab" data-tab="rejected">❌ Rejected</button>
+    <button class="tab" data-tab="all">All</button>
+  </div>
+
+  <div class="tab-panel active" data-tab="pending" data-group="appr">
+    <div id="pending-list"></div>
+  </div>
+  <div class="tab-panel" data-tab="approved" data-group="appr">
+    <div id="approved-list"></div>
+  </div>
+  <div class="tab-panel" data-tab="rejected" data-group="appr">
+    <div id="rejected-list"></div>
+  </div>
+  <div class="tab-panel" data-tab="all" data-group="appr">
+    <div id="all-list"></div>
+  </div>
+
+</main>
+
+<!-- Reject Reason Modal -->
+<div class="modal-overlay" id="reject-modal">
+  <div class="modal">
+    <div class="modal-header"><h2 class="modal-title">Reject Registration</h2><button class="modal-close">✕</button></div>
+    <div class="modal-body">
+      <p style="font-size:14px;color:var(--text-muted);margin-bottom:16px">Provide a reason for rejection (optional — will be shown to the applicant):</p>
+      <textarea class="form-control" id="reject-reason" rows="3" placeholder="e.g. Incorrect roll number provided. Please re-register with correct details."></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('reject-modal')">Cancel</button>
+      <button class="btn btn-danger" onclick="confirmReject()">Reject Registration</button>
+    </div>
+  </div>
+</div>
+
+<script src="demo-data.js"></script>
+<script src="app.js"></script>
+<script>
+let pendingList = [...DEMO_PENDING];
+let rejectingId = null;
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (isStudent()) { window.location.href = 'dashboard.html'; }
+  // Teachers only see their own dept
+  renderAll();
+});
+
+function applicantCard(p, showActions = true) {
+  const dept = DEMO_DEPARTMENTS.find(d => d.id === p.deptId);
+  const statusMap = {
+    pending:  '<span class="badge badge-warning badge-dot">Pending</span>',
+    approved: '<span class="badge badge-success badge-dot">Approved</span>',
+    rejected: '<span class="badge badge-danger badge-dot">Rejected</span>',
+  };
+  return `
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-body" style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+        <div>${avatarHtml(p.name, 44)}</div>
+        <div style="flex:1;min-width:200px">
+          <div style="font-weight:700;font-size:15px">${p.name}</div>
+          <div style="font-size:13px;color:var(--text-muted)">${p.email}</div>
+          <div style="display:flex;gap:10px;margin-top:6px;flex-wrap:wrap;font-size:13px">
+            <span class="badge badge-primary">${p.role.charAt(0).toUpperCase()+p.role.slice(1)}</span>
+            ${dept ? `<span class="badge badge-info">${dept.code}</span>` : ''}
+            ${p.year ? `<span class="badge badge-primary">Year ${p.year}</span>` : ''}
+            ${p.section ? `<span class="badge badge-primary">Section ${p.section}</span>` : ''}
+            ${p.rollNo ? `<code style="font-size:12px;color:var(--primary);font-weight:700">${p.rollNo}</code>` : ''}
+          </div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="margin-bottom:8px">${statusMap[p.status]}</div>
+          <div style="font-size:12px;color:var(--text-muted)">Applied: ${p.appliedDate}</div>
+          ${p.status === 'pending' && showActions ? `
+          <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end">
+            <button class="btn btn-success btn-sm" onclick="approveUser('${p.id}')">✅ Approve</button>
+            <button class="btn btn-danger btn-sm" onclick="openReject('${p.id}')">❌ Reject</button>
+          </div>` : ''}
+          ${p.status === 'rejected' && p.rejectReason ? `<div style="font-size:12px;color:var(--danger);margin-top:6px;max-width:200px">Reason: ${p.rejectReason}</div>` : ''}
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderAll() {
+  const user = currentUser();
+  const isAdminUser = isAdmin();
+  const isTeacherUser = isTeacher();
+
+  const visibleList = pendingList.filter(p => {
+    // 1. Admins see all requests
+    if (isAdminUser) return true;
+    // 2. Teachers see only non-admin requests from their own department
+    if (isTeacherUser) {
+      if (p.role === 'admin') return false;
+      if (p.deptId !== user?.deptId) return false;
+      return true;
+    }
+    return false;
+  });
+
+  const pending  = visibleList.filter(p => p.status === 'pending');
+  const approved = visibleList.filter(p => p.status === 'approved');
+  const rejected = visibleList.filter(p => p.status === 'rejected');
+
+  document.getElementById('count-pending').textContent = pending.length;
+  document.getElementById('count-approved').textContent = approved.length;
+  document.getElementById('count-rejected').textContent = rejected.length;
+  document.getElementById('tab-pending-count').textContent = pending.length;
+
+  updatePendingBadge();
+
+  const empty = (msg) => `<div class="empty-state" style="padding:60px"><div class="empty-icon">📋</div><p>${msg}</p></div>`;
+
+  document.getElementById('pending-list').innerHTML  = pending.length  ? pending.map(p => applicantCard(p, true)).join('') : empty('No pending registrations');
+  document.getElementById('approved-list').innerHTML = approved.length ? approved.map(p => applicantCard(p, false)).join('') : empty('No approved registrations');
+  document.getElementById('rejected-list').innerHTML = rejected.length ? rejected.map(p => applicantCard(p, false)).join('') : empty('No rejected registrations');
+  document.getElementById('all-list').innerHTML = pendingList.length ? pendingList.map(p => applicantCard(p, p.status==='pending')).join('') : empty('No registrations');
+}
+
+function approveUser(id) {
+  const p = pendingList.find(x => x.id === id);
+  if (!p) return;
+  p.status = 'approved';
+
+  // Add to users
+  const newUser = {
+    id: 'u' + Date.now(), name: p.name, email: p.email, role: p.role,
+    deptId: p.deptId || null, year: p.year || null, section: p.section || null,
+    rollNo: p.rollNo || null, status: 'active',
+    avatar: p.name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2),
+    joinDate: new Date().toISOString().split('T')[0],
+  };
+  DEMO_USERS.push(newUser);
+  
+  saveStorage('pending', DEMO_PENDING);
+  saveStorage('users', DEMO_USERS);
+
+  renderAll();
+  showToast(`${p.name} approved and account activated! ✅`, 'success');
+}
+
+function openReject(id) {
+  rejectingId = id;
+  document.getElementById('reject-reason').value = '';
+  openModal('reject-modal');
+}
+
+function confirmReject() {
+  const p = pendingList.find(x => x.id === rejectingId);
+  if (!p) return;
+  p.status = 'rejected';
+  p.rejectReason = document.getElementById('reject-reason').value.trim() || 'No reason provided';
+  
+  saveStorage('pending', DEMO_PENDING);
+
+  closeModal('reject-modal');
+  renderAll();
+  showToast(`${p.name}'s registration rejected`, 'warning');
+}
+</script>
+</body>
+</html>
