@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SmartAttend — Modern College Attendance System</title>
+  <meta name="description" content="SmartAttend is a free, modern smart attendance system for colleges and universities. QR codes, real-time dashboard, marks tracking and detailed analytics." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary:    #6366f1;
+      --primary-d:  #4f46e5;
+      --accent:     #06b6d4;
+      --success:    #10b981;
+      --warning:    #f59e0b;
+      --danger:     #ef4444;
+      --text:       #0f172a;
+      --text-2:     #475569;
+      --text-3:     #94a3b8;
+      --surface:    #ffffff;
+      --bg:         #f8fafc;
+      --border:     #e2e8f0;
+      --radius:     14px;
+      --radius-lg:  22px;
+      --shadow:     0 4px 24px rgba(99,102,241,.12);
+      --shadow-xl:  0 20px 60px rgba(99,102,241,.18);
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #fff;
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* ── Scrollbar ─────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 99px; }
+
+    /* ── NAV ────────────────────────────────────────────── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 48px;
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(226,232,240,0.6);
+      transition: all 0.3s;
+    }
+    nav.scrolled {
+      padding: 12px 48px;
+      box-shadow: 0 4px 20px rgba(0,0,0,.06);
+    }
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+    .nav-brand-icon {
+      width: 38px; height: 38px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .nav-brand-name {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--text);
+    }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .nav-link {
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-2);
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .nav-link:hover { background: #f1f5f9; color: var(--primary); }
+    .nav-cta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 22px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .btn-outline {
+      background: transparent;
+      border: 1.5px solid var(--border);
+      color: var(--text);
+    }
+    .btn-outline:hover { border-color: var(--primary); color: var(--primary); background: #f1f5fb; }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--primary-d));
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(99,102,241,.35);
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(99,102,241,.45); }
+    .btn-lg { padding: 14px 32px; font-size: 16px; border-radius: 12px; }
+    .btn-xl { padding: 16px 40px; font-size: 17px; border-radius: 14px; }
+
+    /* ── HERO ───────────────────────────────────────────── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 120px 24px 80px;
+      background:
+        radial-gradient(ellipse 80% 50% at 50% -10%, rgba(99,102,241,.12) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 40% at 90% 50%, rgba(6,182,212,.08) 0%, transparent 60%);
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      width: 800px; height: 800px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(99,102,241,.06), transparent 70%);
+      top: -200px; left: 50%;
+      transform: translateX(-50%);
+      pointer-events: none;
+    }
+
+    /* floating orbs */
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(60px);
+      opacity: 0.25;
+      animation: drift 8s ease-in-out infinite alternate;
+      pointer-events: none;
+    }
+    .orb-1 { width: 400px; height: 400px; background: var(--primary); top: 10%; left: -8%; }
+    .orb-2 { width: 300px; height: 300px; background: var(--accent);  top: 50%; right: -5%; animation-delay: 3s; }
+    .orb-3 { width: 200px; height: 200px; background: var(--success); bottom: 5%; left: 30%; animation-delay: 1.5s; }
+    @keyframes drift {
+      from { transform: translate(0,   0)   scale(1); }
+      to   { transform: translate(20px, 30px) scale(1.1); }
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, rgba(99,102,241,.12), rgba(6,182,212,.08));
+      border: 1px solid rgba(99,102,241,.2);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 28px;
+      animation: fadeUp 0.6s ease both;
+    }
+    .hero-badge span { width: 8px; height: 8px; border-radius: 50%; background: var(--success); display: inline-block; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+    .hero h1 {
+      font-size: clamp(2.4rem, 6vw, 4.2rem);
+      font-weight: 900;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      margin-bottom: 24px;
+      animation: fadeUp 0.6s ease 0.1s both;
+    }
+    .grad-text {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero p {
+      font-size: clamp(1rem, 2vw, 1.2rem);
+      color: var(--text-2);
+      max-width: 600px;
+      margin: 0 auto 40px;
+      animation: fadeUp 0.6s ease 0.2s both;
+    }
+    .hero-cta {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      animation: fadeUp 0.6s ease 0.3s both;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .hero-note {
+      margin-top: 16px;
+      font-size: 13px;
+      color: var(--text-3);
+      animation: fadeUp 0.6s ease 0.4s both;
+    }
+
+    /* ── DASHBOARD MOCKUP ──────────────────────────────── */
+    .hero-mockup {
+      margin-top: 72px;
+      max-width: 960px;
+      width: 100%;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: var(--shadow-xl), 0 0 0 1px var(--border);
+      background: var(--bg);
+      animation: fadeUp 0.8s ease 0.5s both;
+    }
+    .mockup-bar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .dot { width: 12px; height: 12px; border-radius: 50%; }
+    .dot-r { background: #fe5f57; }
+    .dot-y { background: #febc2e; }
+    .dot-g { background: #28c840; }
+    .url-bar {
+      flex: 1;
+      height: 26px;
+      background: #f1f5f9;
+      border-radius: 6px;
+      margin: 0 12px;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      font-size: 12px;
+      color: #94a3b8;
+    }
+    .mockup-body {
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      min-height: 340px;
+    }
+    .mockup-sidebar {
+      background: #1e1b4b;
+      padding: 20px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .m-brand { color: #fff; font-weight: 800; font-size: 14px; margin-bottom: 16px; padding: 0 8px; }
+    .m-nav {
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.6);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .m-nav.active { background: rgba(255,255,255,0.12); color: #fff; }
+    .mockup-main { padding: 24px; display: flex; flex-direction: column; gap: 16px; }
+    .m-stat-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; }
+    .m-stat {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+    }
+    .m-stat-label { font-size: 11px; color: var(--text-3); font-weight: 500; }
+    .m-stat-val   { font-size: 22px; font-weight: 800; color: var(--text); margin-top: 4px; }
+    .m-stat-sub   { font-size: 11px; color: var(--success); font-weight: 600; }
+    .m-table-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .m-table-head {
+      padding: 10px 16px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-2);
+      border-bottom: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 8px;
+    }
+    .m-table-row {
+      padding: 9px 16px;
+      font-size: 12px;
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 8px;
+      border-bottom: 1px solid #f8fafc;
+      align-items: center;
+      color: var(--text-2);
+    }
+    .m-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 99px;
+      font-size: 10px;
+      font-weight: 700;
+    }
+    .m-badge.p { background: #dcfce7; color: #15803d; }
+    .m-badge.a { background: #fee2e2; color: #b91c1c; }
+    .m-badge.l { background: #fef9c3; color: #a16207; }
+
+    /* ── STATS TICKER ──────────────────────────────────── */
+    .stats-ticker {
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      color: #fff;
+      padding: 20px 0;
+      overflow: hidden;
+    }
+    .ticker-track {
+      display: flex;
+      gap: 60px;
+      animation: ticker 30s linear infinite;
+      white-space: nowrap;
+    }
+    @keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+    .ticker-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    .ticker-num { font-size: 22px; font-weight: 900; }
+    .ticker-label { font-size: 13px; opacity: 0.8; }
+    .ticker-sep { width: 1px; height: 30px; background: rgba(255,255,255,.3); }
+
+    /* ── FEATURES ──────────────────────────────────────── */
+    section { padding: 100px 24px; }
+    .section-inner { max-width: 1100px; margin: 0 auto; }
+    .section-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 14px;
+      border-radius: 999px;
+      background: rgba(99,102,241,.08);
+      border: 1px solid rgba(99,102,241,.18);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      margin-bottom: 16px;
+    }
+    .section-title {
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      font-weight: 800;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+      margin-bottom: 16px;
+    }
+    .section-sub {
+      font-size: 1.05rem;
+      color: var(--text-2);
+      max-width: 540px;
+      margin-bottom: 56px;
+    }
+
+    /* Feature grid */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+    }
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 32px 28px;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(99,102,241,.04), transparent);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .feature-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-xl); border-color: rgba(99,102,241,.2); }
+    .feature-card:hover::before { opacity: 1; }
+    .feature-icon {
+      width: 52px; height: 52px;
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      margin-bottom: 20px;
+    }
+    .feature-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 10px; }
+    .feature-desc  { font-size: 14px; color: var(--text-2); line-height: 1.65; }
+
+    /* ── HOW IT WORKS ──────────────────────────────────── */
+    .steps { background: var(--bg); }
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 32px;
+      counter-reset: step;
+    }
+    .step-card {
+      text-align: center;
+      padding: 32px 24px;
+      position: relative;
+    }
+    .step-card::after {
+      content: '';
+      position: absolute;
+      top: 56px; right: -16px;
+      width: 32px; height: 2px;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      border-radius: 99px;
+    }
+    .step-card:last-child::after { display: none; }
+    .step-num {
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: #fff;
+      font-size: 20px;
+      font-weight: 900;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 20px;
+      box-shadow: 0 8px 20px rgba(99,102,241,.3);
+    }
+    .step-title { font-size: 1rem; font-weight: 700; margin-bottom: 10px; }
+    .step-desc  { font-size: 13px; color: var(--text-2); }
+
+    /* ── ROLES ─────────────────────────────────────────── */
+    .roles-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 24px;
+    }
+    .role-card {
+      border-radius: var(--radius-lg);
+      padding: 36px 30px;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s;
+    }
+    .role-card:hover { transform: translateY(-4px); }
+    .role-card.admin   { background: linear-gradient(135deg, #ede9fe, #ddd6fe); border: 1px solid #c4b5fd; }
+    .role-card.teacher { background: linear-gradient(135deg, #cffafe, #a5f3fc); border: 1px solid #67e8f9; }
+    .role-card.student { background: linear-gradient(135deg, #d1fae5, #a7f3d0); border: 1px solid #6ee7b7; }
+    .role-icon { font-size: 40px; margin-bottom: 16px; }
+    .role-title { font-size: 1.15rem; font-weight: 800; margin-bottom: 12px; }
+    .role-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .role-list li { font-size: 13px; display: flex; align-items: center; gap: 8px; }
+    .role-list li::before { content: '✓'; font-weight: 700; color: var(--primary); flex-shrink: 0; }
+
+    /* ── CTA SECTION ───────────────────────────────────── */
+    .cta-section {
+      background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e3a5f 100%);
+      padding: 100px 24px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .cta-section::before {
+      content: '';
+      position: absolute;
+      width: 700px; height: 700px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(99,102,241,.15), transparent 70%);
+      top: -200px; left: 50%;
+      transform: translateX(-50%);
+    }
+    .cta-section h2 {
+      font-size: clamp(1.8rem, 4vw, 3rem);
+      font-weight: 900;
+      color: #fff;
+      margin-bottom: 16px;
+      position: relative;
+    }
+    .cta-section p {
+      color: rgba(255,255,255,.7);
+      font-size: 1.1rem;
+      max-width: 520px;
+      margin: 0 auto 40px;
+      position: relative;
+    }
+    .cta-btns {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      position: relative;
+    }
+    .btn-white {
+      background: #fff;
+      color: var(--primary);
+      box-shadow: 0 8px 24px rgba(0,0,0,.15);
+    }
+    .btn-white:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(0,0,0,.2); }
+    .btn-ghost-white {
+      background: rgba(255,255,255,.1);
+      color: #fff;
+      border: 1.5px solid rgba(255,255,255,.3);
+      backdrop-filter: blur(10px);
+    }
+    .btn-ghost-white:hover { background: rgba(255,255,255,.2); }
+
+    /* ── FOOTER ────────────────────────────────────────── */
+    footer {
+      background: #0f172a;
+      color: rgba(255,255,255,.6);
+      padding: 48px 24px 32px;
+    }
+    .footer-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 24px;
+    }
+    .footer-brand { display: flex; align-items: center; gap: 10px; }
+    .footer-brand-name { color: #fff; font-weight: 800; font-size: 1rem; }
+    .footer-links { display: flex; gap: 24px; }
+    .footer-links a { color: rgba(255,255,255,.5); text-decoration: none; font-size: 14px; transition: color 0.2s; }
+    .footer-links a:hover { color: #fff; }
+    .footer-copy { font-size: 13px; width: 100%; text-align: center; padding-top: 24px; border-top: 1px solid rgba(255,255,255,.08); margin-top: 12px; }
+
+    /* ── RESPONSIVE ────────────────────────────────────── */
+    @media (max-width: 768px) {
+      nav { padding: 14px 20px; }
+      nav.scrolled { padding: 10px 20px; }
+      .nav-links { display: none; }
+      .mockup-body { grid-template-columns: 1fr; }
+      .mockup-sidebar { display: none; }
+      .m-stat-row { grid-template-columns: repeat(2,1fr); }
+      .step-card::after { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ══ NAV ══════════════════════════════════════════════════ -->
+  <nav id="main-nav">
+    <a href="index.html" class="nav-brand">
+      <div class="nav-brand-icon">🎓</div>
+      <span class="nav-brand-name">SmartAttend</span>
+    </a>
+    <div class="nav-links">
+      <a href="#features" class="nav-link">Features</a>
+      <a href="#how-it-works" class="nav-link">How it Works</a>
+      <a href="#roles" class="nav-link">Roles</a>
+    </div>
+    <div class="nav-cta">
+      <a href="login.html" class="btn btn-outline">Sign In</a>
+      <a href="register.html" class="btn btn-primary">Get Started →</a>
+    </div>
+  </nav>
+
+  <!-- ══ HERO ═════════════════════════════════════════════════ -->
+  <section class="hero">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+
+    <div class="hero-badge">
+      <span></span> Now with Firebase Authentication &amp; Firestore
+    </div>
+
+    <h1>
+      Smart Attendance<br/>
+      for <span class="grad-text">Modern Colleges</span>
+    </h1>
+
+    <p>
+      Mark, track, and analyse attendance in seconds. QR codes, real-time dashboards,
+      marks management &amp; detailed reports — all in one free platform.
+    </p>
+
+    <div class="hero-cta">
+      <a href="register.html" class="btn btn-primary btn-xl">
+        🚀 Create Free Account
+      </a>
+      <a href="login.html" class="btn btn-outline btn-xl">
+        Sign In →
+      </a>
+    </div>
+
+    <p class="hero-note">✅ 100% Free · No credit card · Works on any device</p>
+
+    <!-- Dashboard Mockup -->
+    <div class="hero-mockup">
+      <div class="mockup-bar">
+        <span class="dot dot-r"></span>
+        <span class="dot dot-y"></span>
+        <span class="dot dot-g"></span>
+        <div class="url-bar">🔒 smartattend.app / dashboard</div>
+      </div>
+      <div class="mockup-body">
+        <div class="mockup-sidebar">
+          <div class="m-brand">🎓 SmartAttend</div>
+          <div class="m-nav active">📊 Dashboard</div>
+          <div class="m-nav">👨‍🎓 Students</div>
+          <div class="m-nav">📋 Attendance</div>
+          <div class="m-nav">🏫 Departments</div>
+          <div class="m-nav">✅ Approvals</div>
+          <div class="m-nav">✍️ Mark Attend.</div>
+          <div class="m-nav">📝 Marks</div>
+          <div class="m-nav">📈 Reports</div>
+          <div class="m-nav">⚙️ Settings</div>
+        </div>
+        <div class="mockup-main">
+          <div class="m-stat-row">
+            <div class="m-stat">
+              <div class="m-stat-label">Total Students</div>
+              <div class="m-stat-val">1,248</div>
+              <div class="m-stat-sub">↑ 12 this month</div>
+            </div>
+            <div class="m-stat">
+              <div class="m-stat-label">Present Today</div>
+              <div class="m-stat-val">1,091</div>
+              <div class="m-stat-sub" style="color:var(--primary)">87.4%</div>
+            </div>
+            <div class="m-stat">
+              <div class="m-stat-label">Departments</div>
+              <div class="m-stat-val">8</div>
+              <div class="m-stat-sub" style="color:var(--text-3)">UG + PG</div>
+            </div>
+            <div class="m-stat">
+              <div class="m-stat-label">Pending Approvals</div>
+              <div class="m-stat-val" style="color:var(--warning)">14</div>
+              <div class="m-stat-sub" style="color:var(--warning)">Action needed</div>
+            </div>
+          </div>
+          <div class="m-table-wrap">
+            <div class="m-table-head">
+              <span>Student Name</span><span>Roll No</span><span>Section</span><span>Status</span>
+            </div>
+            <div class="m-table-row">
+              <span>Naveen Karthick</span><span>22CS001</span><span>CSE - A</span>
+              <span><span class="m-badge p">Present</span></span>
+            </div>
+            <div class="m-table-row">
+              <span>Priya Devi</span><span>22CS002</span><span>CSE - A</span>
+              <span><span class="m-badge a">Absent</span></span>
+            </div>
+            <div class="m-table-row">
+              <span>Arjun Kumar</span><span>22CS003</span><span>CSE - B</span>
+              <span><span class="m-badge l">Late</span></span>
+            </div>
+            <div class="m-table-row">
+              <span>Kavitha S</span><span>22EC001</span><span>ECE - A</span>
+              <span><span class="m-badge p">Present</span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ STATS TICKER ══════════════════════════════════════════ -->
+  <div class="stats-ticker">
+    <div class="ticker-track">
+      <!-- repeat twice for seamless loop -->
+      <div class="ticker-item"><span class="ticker-num">1,248+</span><span class="ticker-label">Students Tracked</span></div>
+      <div class="ticker-sep"></div>
+      <div class="ticker-item"><span class="ticker-num">8</span><span class="ticker-label">Departments</span></div>
+      <div class="ticker-sep"></div>
+      <div class="ticker-item"><span class="ticker-num">99.9%</span><span class="ticker-label">Uptime</span></div>
+      <div class="ticker-sep"></div>
+      <div class="ticker-item"><span class="ticker-num">QR + GPS</span><span class="ticker-label">Verification</span></div>
+      <div class="ticker-sep"></div>
+      <div class="ticker-item"><span class="ticker-num">Real-Time</span><span class="ticker-label">Dashboard</span></div>
+      <div class="ticker-sep"></div>
+      <div class="ticker-item"><span class="ticker-num">100%</span><span class="ticker-label">Free Forever</span></div>
+      <div class="ticker-sep"></div>
+      <!-- duplicate for loop -->
+      <div class="ticker-item"><span class="ticker-num">1,248+</span><span class="ticker-label">Students Tracked</span></div>
+      <div class="ticker-sep"></div>
+      <div class="ticker-item"><span class="ticker-num">8</span><span class="ticker-label">Departments</span></div>
+      <div class="ticker-sep"></div>
+      <div class="ticker-item"><span class="ticker-num">99.9%</span><span class="ticker-label">Uptime</span></div>
+      <div class="ticker-sep"></div>
+      <div class="ticker-item"><span class="ticker-num">QR + GPS</span><span class="ticker-label">Verification</span></div>
+      <div class="ticker-sep"></div>
+      <div class="ticker-item"><span class="ticker-num">Real-Time</span><span class="ticker-label">Dashboard</span></div>
+      <div class="ticker-sep"></div>
+      <div class="ticker-item"><span class="ticker-num">100%</span><span class="ticker-label">Free Forever</span></div>
+      <div class="ticker-sep"></div>
+    </div>
+  </div>
+
+  <!-- ══ FEATURES ══════════════════════════════════════════════ -->
+  <section id="features">
+    <div class="section-inner">
+      <div class="section-tag">✨ Features</div>
+      <h2 class="section-title">Everything your college needs,<br/>out of the box</h2>
+      <p class="section-sub">No setup headache. Just sign up and start managing attendance with powerful tools built for real classrooms.</p>
+      <div class="feature-grid">
+
+        <div class="feature-card">
+          <div class="feature-icon" style="background:#ede9fe">📱</div>
+          <div class="feature-title">QR Code Attendance</div>
+          <div class="feature-desc">Generate unique QR codes per session. Students scan to mark themselves present — works on any smartphone in seconds.</div>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon" style="background:#cffafe">📊</div>
+          <div class="feature-title">Real-Time Dashboard</div>
+          <div class="feature-desc">Live counters, department-wise breakdowns, at-risk alerts, and daily summaries — all updating without a page refresh.</div>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon" style="background:#d1fae5">✍️</div>
+          <div class="feature-title">Manual Attendance</div>
+          <div class="feature-desc">Take roll-call manually for each class with one-click present/absent/late marking and bulk-save for entire sections.</div>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon" style="background:#fef9c3">📝</div>
+          <div class="feature-title">IAT Marks Management</div>
+          <div class="feature-desc">Record IAT 1, IAT 2, Model Exam and Semester marks. Instantly see averages, pass/fail stats, and student progress.</div>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon" style="background:#fee2e2">📈</div>
+          <div class="feature-title">Reports &amp; Analytics</div>
+          <div class="feature-desc">Export attendance and marks as CSV. View trend charts, department comparisons, and defaulter lists with one click.</div>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon" style="background:#f0fdf4">🔐</div>
+          <div class="feature-title">Firebase Auth</div>
+          <div class="feature-desc">Secure login with Email &amp; Password or passwordless Email Link. Role-based access keeps each user in their lane.</div>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon" style="background:#fdf4ff">🏫</div>
+          <div class="feature-title">Multi-Department Support</div>
+          <div class="feature-desc">Manage CSE, ECE, IT, MBA and more simultaneously. Section-wise controls, HOD assignments, and per-dept timetables.</div>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon" style="background:#fff7ed">📅</div>
+          <div class="feature-title">Timetable &amp; Schedule</div>
+          <div class="feature-desc">Build the weekly bell schedule, map teachers to subjects and periods, and auto-link attendance sessions to timetable slots.</div>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon" style="background:#f0f9ff">✅</div>
+          <div class="feature-title">Approval Workflow</div>
+          <div class="feature-desc">New students and teachers register and wait for admin approval. Admins get a badge count and approve/reject with one click.</div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ HOW IT WORKS ══════════════════════════════════════════ -->
+  <section id="how-it-works" class="steps">
+    <div class="section-inner">
+      <div class="section-tag">⚡ Quick Start</div>
+      <h2 class="section-title">Up and running in 4 steps</h2>
+      <p class="section-sub">No complex installation. Just register, verify, and go.</p>
+      <div class="steps-grid">
+        <div class="step-card">
+          <div class="step-num">1</div>
+          <div class="step-title">Register Your College</div>
+          <div class="step-desc">Admin registers with a college code. Sets up departments, sections, and bell periods in minutes.</div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">2</div>
+          <div class="step-title">Invite Teachers &amp; Students</div>
+          <div class="step-desc">Teachers and students self-register. Admin approves each request from the Approvals page.</div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">3</div>
+          <div class="step-title">Mark Attendance Daily</div>
+          <div class="step-desc">Generate a QR code or use manual roll-call. Students are marked Present, Absent, or Late instantly.</div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">4</div>
+          <div class="step-title">View Reports &amp; Marks</div>
+          <div class="step-desc">Access live dashboards, export CSVs, enter IAT marks, and generate defaulter reports any time.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ ROLES ═════════════════════════════════════════════════ -->
+  <section id="roles">
+    <div class="section-inner">
+      <div class="section-tag">👥 User Roles</div>
+      <h2 class="section-title">Built for every role in your college</h2>
+      <p class="section-sub">Each role gets a tailored experience — only the features they need, nothing they don't.</p>
+      <div class="roles-grid">
+
+        <div class="role-card admin">
+          <div class="role-icon">🔑</div>
+          <div class="role-title">Admin</div>
+          <ul class="role-list">
+            <li>Full dashboard access</li>
+            <li>Manage departments &amp; sections</li>
+            <li>Approve / reject registrations</li>
+            <li>View &amp; export all reports</li>
+            <li>Configure attendance rules</li>
+            <li>Manage timetable &amp; schedule</li>
+          </ul>
+        </div>
+
+        <div class="role-card teacher">
+          <div class="role-icon">👩‍🏫</div>
+          <div class="role-title">Teacher</div>
+          <ul class="role-list">
+            <li>Mark attendance for classes</li>
+            <li>Generate QR codes per session</li>
+            <li>Enter IAT &amp; exam marks</li>
+            <li>View class-wise reports</li>
+            <li>Approve student registrations</li>
+            <li>Access department timetable</li>
+          </ul>
+        </div>
+
+        <div class="role-card student">
+          <div class="role-icon">👨‍🎓</div>
+          <div class="role-title">Student</div>
+          <ul class="role-list">
+            <li>Scan QR to mark attendance</li>
+            <li>View own attendance %</li>
+            <li>Check IAT &amp; exam marks</li>
+            <li>Get at-risk alerts</li>
+            <li>Download attendance report</li>
+            <li>View class schedule</li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ CTA ═══════════════════════════════════════════════════ -->
+  <div class="cta-section">
+    <h2>Ready to modernise your college attendance?</h2>
+    <p>Join thousands of educators already saving hours every week with SmartAttend. It's completely free.</p>
+    <div class="cta-btns">
+      <a href="register.html" class="btn btn-xl btn-white">🚀 Create Free Account</a>
+      <a href="login.html"   class="btn btn-xl btn-ghost-white">Sign In →</a>
+    </div>
+  </div>
+
+  <!-- ══ FOOTER ════════════════════════════════════════════════ -->
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <span style="font-size:20px">🎓</span>
+        <span class="footer-brand-name">SmartAttend</span>
+      </div>
+      <div class="footer-links">
+        <a href="#features">Features</a>
+        <a href="#how-it-works">How it Works</a>
+        <a href="login.html">Login</a>
+        <a href="register.html">Register</a>
+      </div>
+    </div>
+    <div class="footer-copy">
+      © 2026 SmartAttend — College Edition &nbsp;·&nbsp; Free Forever &nbsp;·&nbsp; Built with ❤️ for educators
+    </div>
+  </footer>
+
+  <script>
+    // Navbar scroll effect
+    const nav = document.getElementById('main-nav');
+    window.addEventListener('scroll', () => {
+      nav.classList.toggle('scrolled', window.scrollY > 40);
+    });
+
+    // Smooth reveal on scroll (IntersectionObserver)
+    const revealEls = document.querySelectorAll('.feature-card, .step-card, .role-card');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry, i) => {
+        if (entry.isIntersecting) {
+          entry.target.style.transitionDelay = (i % 3) * 0.08 + 's';
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)';
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12 });
+
+    revealEls.forEach(el => {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(32px)';
+      el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+      observer.observe(el);
+    });
+
+    // If user is already logged in, show Go to Dashboard button
+    const stored = sessionStorage.getItem('sa_user');
+    if (stored) {
+      const user = JSON.parse(stored);
+      const name = (user.name || '').split(' ')[0];
+      document.querySelectorAll('.nav-cta').forEach(el => {
+        el.innerHTML = `
+          <span style="font-size:13px;color:#64748b;font-weight:500">👋 Hi, ${name}</span>
+          <a href="dashboard.html" class="btn btn-primary">Go to Dashboard →</a>
+        `;
+      });
+      document.querySelectorAll('.hero-cta').forEach(el => {
+        el.innerHTML = `
+          <a href="dashboard.html" class="btn btn-primary btn-xl">📊 Go to Dashboard →</a>
+        `;
+      });
+      document.querySelectorAll('.cta-btns').forEach(el => {
+        el.innerHTML = `
+          <a href="dashboard.html" class="btn btn-xl btn-white">📊 Go to Dashboard →</a>
+        `;
+      });
+    }
+  </script>
+</body>
+</html>

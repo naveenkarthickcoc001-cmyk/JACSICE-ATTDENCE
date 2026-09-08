@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Departments &amp; Sections — SmartAttend</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .dept-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      transition: all var(--transition);
+      cursor: pointer;
+      box-shadow: var(--shadow-sm);
+    }
+    .dept-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); border-color: var(--primary-200); }
+    .dept-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+    .subject-row { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: var(--radius-sm); background: var(--bg-secondary); margin-bottom: 6px; font-size: 14px; }
+    .subject-row:hover { background: var(--primary-50); }
+    .section-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--primary-50);
+      color: var(--primary);
+      border: 1px solid var(--primary-200);
+      border-radius: 999px;
+      padding: 4px 12px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .section-pill .del-btn {
+      cursor: pointer;
+      color: var(--danger);
+      font-weight: 800;
+      margin-left: 6px;
+      font-size: 14px;
+      padding: 0 4px;
+      border-radius: 50%;
+      line-height: 1;
+      transition: background 0.15s;
+    }
+    .section-pill .del-btn:hover {
+      background: var(--danger-bg);
+    }
+  </style>
+</head>
+<body>
+<div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">🎓</div>
+    <div><div class="brand-name">SmartAttend</div><div class="brand-sub">College Edition</div></div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">
+      <div class="nav-section-label">Main</div>
+      <a class="nav-item" href="dashboard.html"><span class="nav-icon">📊</span> Dashboard</a>
+      <a class="nav-item" href="users.html"><span class="nav-icon">👨‍🎓</span> Students</a>
+      <a class="nav-item" href="attendance.html"><span class="nav-icon">📋</span> Attendance</a>
+      <a class="nav-item active" href="departments.html"><span class="nav-icon">🏫</span> Departments</a>
+      <a class="nav-item" href="approvals.html"><span class="nav-icon">✅</span> Approvals <span class="nav-badge" id="pending-badge">3</span></a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">Attendance</div>
+      <a class="nav-item" href="take-attendance.html"><span class="nav-icon">✍️</span> Mark Attendance</a>
+      <a class="nav-item" href="attendance.html"><span class="nav-icon">📋</span> Attendance Log</a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">Marks</div>
+      <a class="nav-item" href="marks.html"><span class="nav-icon">📝</span> Marks Dashboard</a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">Analytics</div>
+      <a class="nav-item" href="reports.html"><span class="nav-icon">📈</span> Reports</a>
+      <a class="nav-item" href="schedule.html"><span class="nav-icon">📅</span> Schedule</a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">Account</div>
+      <a class="nav-item" href="settings.html"><span class="nav-icon">⚙️</span> Settings</a>
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-info">
+      <div class="user-avatar" data-user-avatar>AU</div>
+      <div><div class="user-name" data-user-name>Admin User</div><div class="user-role" data-user-role>Admin</div></div>
+    </div>
+    <button class="nav-item" data-logout style="margin-top:4px;color:var(--danger)"><span class="nav-icon">🚪</span> Logout</button>
+  </div>
+</aside>
+
+<header class="app-header">
+  <div class="header-left">
+    <button class="sidebar-toggle" id="sidebar-toggle">☰</button>
+    <div><div class="page-title">Departments &amp; Sections</div><div class="page-breadcrumb">Manage UG/PG departments, years, sections and subjects</div></div>
+  </div>
+  <div class="header-right" id="header-actions">
+    <button class="btn btn-secondary btn-sm" onclick="openModal('add-section-modal')">+ Add Section</button>
+    <button class="btn btn-primary" onclick="openModal('add-dept-modal')">+ Add Department</button>
+  </div>
+</header>
+
+<main class="main-content">
+
+  <!-- Program Tabs -->
+  <div class="tabs" data-group="program" style="margin-bottom:24px">
+    <button class="tab active" data-tab="UG">🎓 UG Departments (Under Graduate)</button>
+    <button class="tab" data-tab="PG">🏆 PG Departments (Post Graduate)</button>
+  </div>
+  <div class="tab-panel active" data-tab="UG" data-group="program">
+    <div id="ug-grid" class="grid-auto"></div>
+  </div>
+  <div class="tab-panel" data-tab="PG" data-group="program">
+    <div id="pg-grid" class="grid-auto"></div>
+  </div>
+
+  <!-- Subject & Section Management Panel -->
+  <div class="card hidden" id="subject-panel" style="margin-top:24px">
+    <div class="card-header">
+      <div>
+        <span class="card-title" id="subject-panel-title">Subjects &amp; Sections</span>
+        <div style="font-size:13px;color:var(--text-muted)" id="subject-panel-sub"></div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-secondary btn-sm" onclick="openModal('add-section-modal')">+ Add Section</button>
+        <button class="btn btn-primary btn-sm" onclick="openModal('add-subject-modal')">+ Add Subject</button>
+        <button class="btn btn-ghost btn-sm" onclick="closeSubjectPanel()">✕ Close</button>
+      </div>
+    </div>
+    <div class="card-body">
+      <!-- Year tabs -->
+      <div class="tabs" data-group="syear" id="year-tabs" style="margin-bottom:16px"></div>
+      <div id="year-panels"></div>
+    </div>
+  </div>
+
+</main>
+
+<!-- Add Department Modal -->
+<div class="modal-overlay" id="add-dept-modal">
+  <div class="modal">
+    <div class="modal-header"><h2 class="modal-title">🏫 Add New Department</h2><button class="modal-close">✕</button></div>
+    <div class="modal-body">
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div class="form-group"><label class="form-label">Department Name *</label><input type="text" class="form-control" id="new-dept-name" placeholder="e.g. Computer Science & Engineering" /></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div class="form-group"><label class="form-label">Short Code *</label><input type="text" class="form-control" id="new-dept-code" placeholder="e.g. CSE" style="text-transform:uppercase;font-weight:700" /></div>
+          <div class="form-group">
+            <label class="form-label">Program Type *</label>
+            <select class="form-control" id="new-dept-program">
+              <option value="UG">UG — Under Graduate</option>
+              <option value="PG">PG — Post Graduate</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div class="form-group"><label class="form-label">Duration (Years)</label><select class="form-control" id="new-dept-years"><option value="4" selected>4 Years (UG)</option><option value="2">2 Years (PG)</option><option value="3">3 Years</option><option value="1">1 Year</option></select></div>
+          <div class="form-group">
+            <label class="form-label">Initial Sections</label>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px" id="sections-checkboxes"></div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Assign HOD (Teacher)</label>
+          <select class="form-control" id="new-dept-hod">
+            <option value="">Select teacher...</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('add-dept-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="addDepartment()">Create Department</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Section Modal -->
+<div class="modal-overlay" id="add-section-modal">
+  <div class="modal">
+    <div class="modal-header"><h2 class="modal-title">➕ Add New Section</h2><button class="modal-close">✕</button></div>
+    <div class="modal-body">
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div class="form-group">
+          <label class="form-label">Department *</label>
+          <select class="form-control" id="sec-dept-select" onchange="updateSecYearDropdown()"></select>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div class="form-group">
+            <label class="form-label">Academic Year *</label>
+            <select class="form-control" id="sec-year-select"></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Section Name *</label>
+            <input type="text" class="form-control" id="sec-name-input" placeholder="e.g. C, D, or Section A1" style="text-transform:uppercase;font-weight:700" />
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('add-section-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="addNewSection()">Add Section</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Subject Modal -->
+<div class="modal-overlay" id="add-subject-modal">
+  <div class="modal">
+    <div class="modal-header"><h2 class="modal-title">📚 Add Subject</h2><button class="modal-close">✕</button></div>
+    <div class="modal-body">
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div class="form-group"><label class="form-label">Subject Code *</label><input type="text" class="form-control" id="new-sub-code" placeholder="CS2301" style="font-family:monospace" /></div>
+          <div class="form-group"><label class="form-label">Credits</label><input type="number" class="form-control" id="new-sub-credits" value="4" min="1" max="6" /></div>
+        </div>
+        <div class="form-group"><label class="form-label">Subject Name *</label><input type="text" class="form-control" id="new-sub-name" placeholder="Data Structures and Algorithms" /></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div class="form-group">
+            <label class="form-label">Year</label>
+            <select class="form-control" id="new-sub-year">
+              <option value="1">Year 1</option><option value="2" selected>Year 2</option><option value="3">Year 3</option><option value="4">Year 4</option>
+            </select>
+          </div>
+          <div class="form-group"><label class="form-label">Max IAT Marks</label><input type="number" class="form-control" id="new-sub-max" value="50" min="20" max="100" /></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('add-subject-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="addSubject()">Add Subject</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Subject Modal -->
+<div class="modal-overlay" id="edit-subject-modal">
+  <div class="modal">
+    <div class="modal-header"><h2 class="modal-title">✏️ Edit Subject</h2><button class="modal-close">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-sub-id" />
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div class="form-group"><label class="form-label">Subject Code *</label><input type="text" class="form-control" id="edit-sub-code" style="font-family:monospace" /></div>
+          <div class="form-group"><label class="form-label">Credits</label><input type="number" class="form-control" id="edit-sub-credits" min="1" max="6" /></div>
+        </div>
+        <div class="form-group"><label class="form-label">Subject Name *</label><input type="text" class="form-control" id="edit-sub-name" /></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div class="form-group">
+            <label class="form-label">Year</label>
+            <select class="form-control" id="edit-sub-year">
+              <option value="1">Year 1</option><option value="2">Year 2</option><option value="3">Year 3</option><option value="4">Year 4</option>
+            </select>
+          </div>
+          <div class="form-group"><label class="form-label">Max IAT Marks</label><input type="number" class="form-control" id="edit-sub-max" min="20" max="100" /></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('edit-subject-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="updateSubject()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="demo-data.js"></script>
+<script src="app.js"></script>
+<script>
+let activeDeptId = null;
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (isStudent()) { window.location.href = 'dashboard.html'; return; }
+  if (isTeacher()) { document.getElementById('header-actions').innerHTML = ''; }
+
+  // Populate HOD dropdown
+  const hods = DEMO_USERS.filter(u => u.role === 'teacher');
+  document.getElementById('new-dept-hod').innerHTML = '<option value="">Select teacher...</option>' +
+    hods.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+
+  // Initial sections checkboxes in Add Dept modal
+  document.getElementById('sections-checkboxes').innerHTML =
+    ['A','B','C','D'].map(s => `<label style="display:flex;align-items:center;gap:4px;font-size:14px;cursor:pointer"><input type="checkbox" value="${s}" style="accent-color:var(--primary)" ${['A','B'].includes(s)?'checked':''}> ${s}</label>`).join('');
+
+  populateSecDeptDropdown();
+  renderDepts();
+});
+
+function populateSecDeptDropdown() {
+  const sel = document.getElementById('sec-dept-select');
+  sel.innerHTML = DEMO_DEPARTMENTS.map(d => `<option value="${d.id}">${d.code} — ${d.name} (${d.program})</option>`).join('');
+  updateSecYearDropdown();
+}
+
+function updateSecYearDropdown() {
+  const deptId = document.getElementById('sec-dept-select').value;
+  const d = DEMO_DEPARTMENTS.find(x => x.id === deptId) || DEMO_DEPARTMENTS[0];
+  const yrSel = document.getElementById('sec-year-select');
+  if (!d) return;
+  yrSel.innerHTML = Array.from({length: d.years}, (_, i) => `<option value="${i+1}">Year ${i+1}</option>`).join('');
+}
+
+function deptCardHtml(d) {
+  const teacher = DEMO_USERS.find(u => u.id === d.hod);
+  const subjCount = DEMO_SUBJECTS.filter(s => s.deptId === d.id).length;
+  const stuCount = DEMO_USERS.filter(u => u.role === 'student' && u.deptId === d.id).length;
+  
+  return `
+    <div class="dept-card" onclick="openSubjectPanel('${d.id}')">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px">
+        <span class="dept-badge" style="background:var(--primary-50);color:var(--primary)">${d.code}</span>
+        <span class="dept-badge" style="background:${d.program==='UG'?'var(--info-bg)':'var(--success-bg)'};color:${d.program==='UG'?'var(--info)':'var(--success)'}">${d.program}</span>
+      </div>
+      <h3 style="font-size:15px;margin-bottom:6px;line-height:1.4">${d.name}</h3>
+      <div style="font-size:13px;color:var(--text-muted);margin-bottom:16px">HOD: ${teacher ? teacher.name : '—'} &nbsp;·&nbsp; ${d.years} Years</div>
+      <div style="display:flex;gap:16px;font-size:13px">
+        <div><span style="font-weight:700;font-size:16px;color:var(--primary)">${stuCount}</span><div style="color:var(--text-muted)">Students</div></div>
+        <div><span style="font-weight:700;font-size:16px;color:var(--success)">${subjCount}</span><div style="color:var(--text-muted)">Subjects</div></div>
+      </div>
+      <div style="margin-top:14px;display:flex;gap:6px">
+        <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();openSubjectPanel('${d.id}')">📚 Subjects &amp; Sections</button>
+        ${!isStudent() ? `<button class="btn btn-ghost btn-sm" style="font-size:16px" onclick="event.stopPropagation();deleteDept('${d.id}')" title="Delete Department">🗑️</button>` : ''}
+      </div>
+    </div>`;
+}
+
+function renderDepts() {
+  document.getElementById('ug-grid').innerHTML = DEMO_DEPARTMENTS.filter(d=>d.program==='UG').map(deptCardHtml).join('') ||
+    '<div class="empty-state"><div class="empty-icon">🏫</div><p>No UG departments yet. Click "+ Add Department" to create one.</p></div>';
+  document.getElementById('pg-grid').innerHTML = DEMO_DEPARTMENTS.filter(d=>d.program==='PG').map(deptCardHtml).join('') ||
+    '<div class="empty-state"><div class="empty-icon">🏫</div><p>No PG departments yet. Click "+ Add Department" to create one.</p></div>';
+}
+
+function openSubjectPanel(deptId) {
+  activeDeptId = deptId;
+  const d = DEMO_DEPARTMENTS.find(x => x.id === deptId);
+  if (!d) return;
+  const panel = document.getElementById('subject-panel');
+  panel.classList.remove('hidden');
+  document.getElementById('subject-panel-title').textContent = `${d.code} — Subjects & Sections`;
+  document.getElementById('subject-panel-sub').textContent = `${d.name} (${d.program})`;
+  panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  // Build year tabs
+  const years = Array.from({length: d.years}, (_, i) => i + 1);
+  document.getElementById('year-tabs').innerHTML = years.map((y, i) =>
+    `<button class="tab ${i===0?'active':''}" data-tab="yr${y}" data-group="syear">Year ${y}</button>`).join('');
+  document.getElementById('year-panels').innerHTML = years.map((y, i) =>
+    `<div class="tab-panel ${i===0?'active':''}" data-tab="yr${y}" data-group="syear" id="yr-panel-${y}"></div>`).join('');
+
+  years.forEach(y => renderYearContent(deptId, y));
+  initTabs(document.getElementById('subject-panel'));
+}
+
+function renderYearContent(deptId, year) {
+  const panel = document.getElementById(`yr-panel-${year}`);
+  if (!panel) return;
+
+  const secs = getSections(deptId, year);
+  const subs = getSubjects(deptId, year);
+
+  const secsHtml = `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <span style="font-weight:700;font-size:14px">📌 Year ${year} Active Sections (${secs.length})</span>
+        ${!isStudent() ? `<button class="btn btn-secondary btn-sm" onclick="quickAddSection('${deptId}', ${year})">+ Add Section</button>` : ''}
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        ${secs.length > 0 ? secs.map(sec => `
+          <span class="section-pill">
+            Section ${sec}
+            ${!isStudent() ? `<span class="del-btn" onclick="event.stopPropagation();removeSection('${deptId}', ${year}, '${sec}')" title="Delete Section ${sec}">✕</span>` : ''}
+          </span>
+        `).join('') : '<span style="font-size:13px;color:var(--text-muted)">No active sections. Click "+ Add Section" to add one.</span>'}
+      </div>
+    </div>`;
+
+  const subsHtml = subs.length ? subs.map(s => `
+    <div class="subject-row">
+      <code style="color:var(--primary);font-weight:700;font-size:13px;min-width:80px">${s.code}</code>
+      <span style="flex:1;font-weight:600">${s.name}</span>
+      <span class="badge badge-primary">${s.credits} cr</span>
+      <span style="font-size:13px;color:var(--text-muted)">Max IAT: ${s.maxIAT}</span>
+      ${!isStudent() ? `
+        <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openEditSubjectModal('${s.id}')" title="Edit Subject">✏️</button>
+        <button class="btn btn-ghost btn-sm" style="color:var(--danger)" onclick="event.stopPropagation();deleteSubject('${s.id}',${year})" title="Delete Subject">🗑️</button>
+      ` : ''}
+    </div>`).join('') :
+    `<div class="empty-state" style="padding:24px"><div class="empty-icon">📚</div><p>No subjects added for Year ${year}</p>
+     ${!isStudent() ? `<button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="openModal('add-subject-modal')">+ Add Subject</button>` : ''}</div>`;
+
+  panel.innerHTML = secsHtml + subsHtml;
+}
+
+function quickAddSection(deptId, year) {
+  const secName = prompt(`Enter new section name for Year ${year} (e.g. C, D, or A1):`);
+  if (!secName || !secName.trim()) return;
+  addSectionToDept(deptId, year, secName.trim());
+  renderYearContent(deptId, year);
+  showToast(`Section ${secName.trim().toUpperCase()} added to Year ${year}! ✅`, 'success');
+}
+
+function removeSection(deptId, year, secName) {
+  if (!confirm(`Remove Section ${secName} from Year ${year}?`)) return;
+  removeSectionFromDept(deptId, year, secName);
+  renderYearContent(deptId, year);
+  showToast(`Section ${secName} removed! 🗑️`, 'warning');
+}
+
+function addNewSection() {
+  const deptId = document.getElementById('sec-dept-select').value;
+  const year = parseInt(document.getElementById('sec-year-select').value);
+  const name = document.getElementById('sec-name-input').value.trim();
+
+  if (!deptId || !name) {
+    showToast('Department and Section Name are required', 'error');
+    return;
+  }
+
+  addSectionToDept(deptId, year, name);
+  closeModal('add-section-modal');
+  document.getElementById('sec-name-input').value = '';
+
+  if (activeDeptId === deptId) {
+    renderYearContent(deptId, year);
+  }
+  showToast(`Section ${name.toUpperCase()} added to Year ${year}! ✅`, 'success');
+}
+
+function closeSubjectPanel() {
+  document.getElementById('subject-panel').classList.add('hidden');
+  activeDeptId = null;
+}
+
+function addDepartment() {
+  const name = document.getElementById('new-dept-name').value.trim();
+  const code = document.getElementById('new-dept-code').value.trim().toUpperCase();
+  const program = document.getElementById('new-dept-program').value;
+  const years = parseInt(document.getElementById('new-dept-years').value);
+
+  if (!name || !code) { showToast('Department name and code are required', 'error'); return; }
+
+  const newDept = {
+    id: 'd' + Date.now(),
+    name, code, program, years,
+    hod: document.getElementById('new-dept-hod').value || null,
+  };
+
+  DEMO_DEPARTMENTS.push(newDept);
+  saveStorage('departments', DEMO_DEPARTMENTS);
+
+  // Initialize selected sections for all years
+  const selectedSecs = Array.from(document.querySelectorAll('#sections-checkboxes input:checked')).map(cb => cb.value);
+  const defaultSecs = selectedSecs.length > 0 ? selectedSecs : ['A', 'B'];
+  for (let y = 1; y <= years; y++) {
+    defaultSecs.forEach(sec => addSectionToDept(newDept.id, y, sec));
+  }
+
+  closeModal('add-dept-modal');
+  populateSecDeptDropdown();
+  renderDepts();
+  showToast(`${code} (${program}) — ${name} added! ✅`, 'success');
+}
+
+function deleteDept(id) {
+  const d = DEMO_DEPARTMENTS.find(x => x.id === id);
+  if (!d) return;
+  if (!confirm(`Delete ${d.name}? All subjects and sections in this department will also be removed.`)) return;
+  
+  DEMO_DEPARTMENTS = DEMO_DEPARTMENTS.filter(x => x.id !== id);
+  DEMO_SUBJECTS = DEMO_SUBJECTS.filter(s => s.deptId !== id);
+  DEMO_SECTIONS = DEMO_SECTIONS.filter(s => s.deptId !== id);
+
+  saveStorage('departments', DEMO_DEPARTMENTS);
+  saveStorage('subjects', DEMO_SUBJECTS);
+  saveStorage('sections', DEMO_SECTIONS);
+
+  closeSubjectPanel();
+  populateSecDeptDropdown();
+  renderDepts();
+  showToast(`${d.code} department removed! 🗑️`, 'warning');
+}
+
+function addSubject() {
+  if (!activeDeptId) { showToast('Select a department first', 'error'); return; }
+  const code = document.getElementById('new-sub-code').value.trim().toUpperCase();
+  const name = document.getElementById('new-sub-name').value.trim();
+  const year = parseInt(document.getElementById('new-sub-year').value);
+  if (!code || !name) { showToast('Code and name are required', 'error'); return; }
+  
+  const newSub = {
+    id: 's' + Date.now(), deptId: activeDeptId, year, code, name,
+    credits: parseInt(document.getElementById('new-sub-credits').value),
+    maxIAT: parseInt(document.getElementById('new-sub-max').value),
+  };
+  
+  DEMO_SUBJECTS.push(newSub);
+  saveStorage('subjects', DEMO_SUBJECTS);
+
+  closeModal('add-subject-modal');
+  renderYearContent(activeDeptId, year);
+  renderDepts();
+  showToast(`${code} added! ✅`, 'success');
+}
+
+function deleteSubject(id, year) {
+  const s = DEMO_SUBJECTS.find(x => x.id === id);
+  if (!s) return;
+  if (!confirm(`Remove subject ${s.code} — ${s.name}?`)) return;
+  
+  DEMO_SUBJECTS = DEMO_SUBJECTS.filter(x => x.id !== id);
+  saveStorage('subjects', DEMO_SUBJECTS);
+
+  renderYearContent(activeDeptId, year);
+  renderDepts();
+  showToast(`${s.code} removed! 🗑️`, 'warning');
+}
+
+function openEditSubjectModal(id) {
+  const s = DEMO_SUBJECTS.find(x => x.id === id);
+  if (!s) return;
+  document.getElementById('edit-sub-id').value = s.id;
+  document.getElementById('edit-sub-code').value = s.code || '';
+  document.getElementById('edit-sub-name').value = s.name || '';
+  document.getElementById('edit-sub-credits').value = s.credits || 4;
+  document.getElementById('edit-sub-year').value = s.year || 1;
+  document.getElementById('edit-sub-max').value = s.maxIAT || 50;
+  openModal('edit-subject-modal');
+}
+
+function updateSubject() {
+  const id = document.getElementById('edit-sub-id').value;
+  const s = DEMO_SUBJECTS.find(x => x.id === id);
+  if (!s) return;
+
+  const code = document.getElementById('edit-sub-code').value.trim().toUpperCase();
+  const name = document.getElementById('edit-sub-name').value.trim();
+  const credits = parseInt(document.getElementById('edit-sub-credits').value) || 4;
+  const year = parseInt(document.getElementById('edit-sub-year').value) || 1;
+  const maxIAT = parseInt(document.getElementById('edit-sub-max').value) || 50;
+
+  if (!code || !name) {
+    showToast('Subject code and name are required', 'error');
+    return;
+  }
+
+  s.code = code;
+  s.name = name;
+  s.credits = credits;
+  s.year = year;
+  s.maxIAT = maxIAT;
+
+  saveStorage('subjects', DEMO_SUBJECTS);
+  closeModal('edit-subject-modal');
+
+  if (activeDeptId) {
+    renderYearContent(activeDeptId, year);
+  }
+  renderDepts();
+  showToast(`Subject ${code} updated successfully! ✏️`, 'success');
+}
+</script>
+</body>
+</html>
